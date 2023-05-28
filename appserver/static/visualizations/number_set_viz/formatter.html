@@ -1,0 +1,703 @@
+<form class="splunk-formatter-section" section-label="General">
+        <splunk-control-group label="Item height" help="">
+                <span style="display:inline-block; margin:5px;">min</span>
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.heightmin" value="50" style="width: 32px; vertical-align:top; display:inline-block; flex: none; "></splunk-text-input>
+                <span style="display:inline-block; margin:5px 24px 5px 5px;">px</span>
+                <span style="display:inline-block; margin:5px;">max</span>
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.heightmax" value="300" style="width: 32px; vertical-align:top; display:inline-block; flex: none;"></splunk-text-input>
+                <span style="display:inline-block; margin:5px 10px 5px 5px">px</span>
+        </splunk-control-group>
+
+        <splunk-control-group label="Item width" help="As a percentage of height. 100% = square">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.ratio" value="200" style="width: 64px;  vertical-align:top; display:inline-block; flex: none;"></splunk-text-input>
+                <span style="display:inline-block; margin:5px 15px 5px 5px;">%</span>
+        </splunk-control-group>
+
+        <splunk-control-group label="Item margin" help="">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.margin" value="10" style="width: 64px;  vertical-align:top; display:inline-block; flex: none;"></splunk-text-input>
+                <span style="display:inline-block; margin:5px 15px 5px 5px;">px</span>
+        </splunk-control-group>
+
+        <splunk-control-group label="No-data color" help="">
+                <splunk-color-picker name="{{VIZ_NAMESPACE}}.nodatacolor" value="#0178c7" type="splunkCategorical" style="vertical-align:top; display:inline-block;">
+                        <splunk-color>#ffffff</splunk-color>
+                        <splunk-color>#C6C6C6</splunk-color>
+                        <splunk-color>#919191</splunk-color>
+                        <splunk-color>#5E5E5E</splunk-color>
+                        <splunk-color>#000000</splunk-color>
+                        <splunk-color>#53a051</splunk-color>
+                        <splunk-color>#dc4d41</splunk-color>
+                        <splunk-color>#d16f18</splunk-color>
+                        <splunk-color>#009DD9</splunk-color>
+                        <splunk-color>#ebb839</splunk-color>
+                        <splunk-color>#1a9035</splunk-color>
+                        <splunk-color>#b22b32</splunk-color>
+                        <splunk-color>#AF5300</splunk-color>
+                        <splunk-color>#0178c7</splunk-color>
+                        <splunk-color>#ecbc1b</splunk-color>
+                </splunk-color-picker>
+        </splunk-control-group>
+        
+        <splunk-control-group label="Threshold min" help="">
+                <splunk-color-picker name="{{VIZ_NAMESPACE}}.thresholdcol1" value="#1a9035" type="splunkCategorical" style="vertical-align:top; display:inline-block;">
+                        <splunk-color>#ffffff</splunk-color>
+                        <splunk-color>#C6C6C6</splunk-color>
+                        <splunk-color>#919191</splunk-color>
+                        <splunk-color>#5E5E5E</splunk-color>
+                        <splunk-color>#000000</splunk-color>
+                        <splunk-color>#53a051</splunk-color>
+                        <splunk-color>#dc4d41</splunk-color>
+                        <splunk-color>#d16f18</splunk-color>
+                        <splunk-color>#009DD9</splunk-color>
+                        <splunk-color>#ebb839</splunk-color>
+                        <splunk-color>#1a9035</splunk-color>
+                        <splunk-color>#b22b32</splunk-color>
+                        <splunk-color>#AF5300</splunk-color>
+                        <splunk-color>#0178c7</splunk-color>
+                        <splunk-color>#ecbc1b</splunk-color>
+                </splunk-color-picker>
+        </splunk-control-group>
+
+        <splunk-control-group label="Threshold 1" help="">
+                <splunk-color-picker name="{{VIZ_NAMESPACE}}.thresholdcol2" value="#d16f18" type="splunkCategorical" style="vertical-align:top; display:inline-block;">
+                        <splunk-color>#ffffff</splunk-color>
+                        <splunk-color>#C6C6C6</splunk-color>
+                        <splunk-color>#919191</splunk-color>
+                        <splunk-color>#5E5E5E</splunk-color>
+                        <splunk-color>#000000</splunk-color>
+                        <splunk-color>#53a051</splunk-color>
+                        <splunk-color>#dc4d41</splunk-color>
+                        <splunk-color>#d16f18</splunk-color>
+                        <splunk-color>#009DD9</splunk-color>
+                        <splunk-color>#ebb839</splunk-color>
+                        <splunk-color>#1a9035</splunk-color>
+                        <splunk-color>#b22b32</splunk-color>
+                        <splunk-color>#AF5300</splunk-color>
+                        <splunk-color>#0178c7</splunk-color>
+                        <splunk-color>#ecbc1b</splunk-color>
+                </splunk-color-picker>
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.thresholdval2" value="70" style="width: 80px; vertical-align:top; display:inline-block; flex: none; margin-left: 26px;"></splunk-text-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Threshold 2" help="">
+                <splunk-color-picker name="{{VIZ_NAMESPACE}}.thresholdcol3" value="#b22b32" type="splunkCategorical" style="vertical-align:top; display:inline-block;">
+                        <splunk-color>#ffffff</splunk-color>
+                        <splunk-color>#C6C6C6</splunk-color>
+                        <splunk-color>#919191</splunk-color>
+                        <splunk-color>#5E5E5E</splunk-color>
+                        <splunk-color>#000000</splunk-color>
+                        <splunk-color>#53a051</splunk-color>
+                        <splunk-color>#dc4d41</splunk-color>
+                        <splunk-color>#d16f18</splunk-color>
+                        <splunk-color>#009DD9</splunk-color>
+                        <splunk-color>#ebb839</splunk-color>
+                        <splunk-color>#1a9035</splunk-color>
+                        <splunk-color>#b22b32</splunk-color>
+                        <splunk-color>#AF5300</splunk-color>
+                        <splunk-color>#0178c7</splunk-color>
+                        <splunk-color>#ecbc1b</splunk-color>
+                </splunk-color-picker>
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.thresholdval3" value="90" style="width: 80px; vertical-align:top; display:inline-block; flex: none; margin-left: 26px;"></splunk-text-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Threshold 3" help="">
+                <splunk-color-picker name="{{VIZ_NAMESPACE}}.thresholdcol4" value="#ffffff" type="splunkCategorical" style="vertical-align:top; display:inline-block;">
+                        <splunk-color>#ffffff</splunk-color>
+                        <splunk-color>#C6C6C6</splunk-color>
+                        <splunk-color>#919191</splunk-color>
+                        <splunk-color>#5E5E5E</splunk-color>
+                        <splunk-color>#000000</splunk-color>
+                        <splunk-color>#53a051</splunk-color>
+                        <splunk-color>#dc4d41</splunk-color>
+                        <splunk-color>#d16f18</splunk-color>
+                        <splunk-color>#009DD9</splunk-color>
+                        <splunk-color>#ebb839</splunk-color>
+                        <splunk-color>#1a9035</splunk-color>
+                        <splunk-color>#b22b32</splunk-color>
+                        <splunk-color>#AF5300</splunk-color>
+                        <splunk-color>#0178c7</splunk-color>
+                        <splunk-color>#ecbc1b</splunk-color>
+                </splunk-color-picker>
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.thresholdval4" value="" style="width: 80px; vertical-align:top; display:inline-block; flex: none; margin-left: 26px;"></splunk-text-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Threshold 4" help="">
+                <splunk-color-picker name="{{VIZ_NAMESPACE}}.thresholdcol5" value="#ffffff" type="splunkCategorical" style="vertical-align:top; display:inline-block;">
+                        <splunk-color>#ffffff</splunk-color>
+                        <splunk-color>#C6C6C6</splunk-color>
+                        <splunk-color>#919191</splunk-color>
+                        <splunk-color>#5E5E5E</splunk-color>
+                        <splunk-color>#000000</splunk-color>
+                        <splunk-color>#53a051</splunk-color>
+                        <splunk-color>#dc4d41</splunk-color>
+                        <splunk-color>#d16f18</splunk-color>
+                        <splunk-color>#009DD9</splunk-color>
+                        <splunk-color>#ebb839</splunk-color>
+                        <splunk-color>#1a9035</splunk-color>
+                        <splunk-color>#b22b32</splunk-color>
+                        <splunk-color>#AF5300</splunk-color>
+                        <splunk-color>#0178c7</splunk-color>
+                        <splunk-color>#ecbc1b</splunk-color>
+                </splunk-color-picker>
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.thresholdval5" value="" style="width: 80px; vertical-align:top; display:inline-block; flex: none; margin-left: 26px;"></splunk-text-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Threshold 5" help="">
+                <splunk-color-picker name="{{VIZ_NAMESPACE}}.thresholdcol6" value="#ffffff" type="splunkCategorical" style="vertical-align:top; display:inline-block;">
+                        <splunk-color>#ffffff</splunk-color>
+                        <splunk-color>#C6C6C6</splunk-color>
+                        <splunk-color>#919191</splunk-color>
+                        <splunk-color>#5E5E5E</splunk-color>
+                        <splunk-color>#000000</splunk-color>
+                        <splunk-color>#53a051</splunk-color>
+                        <splunk-color>#dc4d41</splunk-color>
+                        <splunk-color>#d16f18</splunk-color>
+                        <splunk-color>#009DD9</splunk-color>
+                        <splunk-color>#ebb839</splunk-color>
+                        <splunk-color>#1a9035</splunk-color>
+                        <splunk-color>#b22b32</splunk-color>
+                        <splunk-color>#AF5300</splunk-color>
+                        <splunk-color>#0178c7</splunk-color>
+                        <splunk-color>#ecbc1b</splunk-color>
+                </splunk-color-picker>
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.thresholdval6" value="" style="width: 80px; vertical-align:top; display:inline-block; flex: none; margin-left: 26px;"></splunk-text-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Item color" help="">
+                <splunk-select name="{{VIZ_NAMESPACE}}.colormode" value="auto" style="vertical-align:top; display:inline-block; width:90px; margin-right:10px;">
+                        <option value="static">Manual</option>
+                        <option value="transparent">Transparent</option>
+                        <option value="lighter3">Threshold color (40% lighter)</option>
+                        <option value="lighter2">Threshold color (20% lighter)</option>
+                        <option value="lighter1">Threshold color (10% lighter)</option>
+                        <option value="auto">Threshold color</option>
+                        <option value="darker1">Threshold color (10% darker)</option>
+                        <option value="darker2">Threshold color (20% darker)</option>
+                        <option value="darker3">Threshold color (40% darker)</option>
+                </splunk-select>
+                <splunk-color-picker name="{{VIZ_NAMESPACE}}.color" value="#000000" type="splunkCategorical" style="vertical-align:top; display:inline-block; margin-top: -2px;">
+                        <splunk-color>#ffffff</splunk-color>
+                        <splunk-color>#C6C6C6</splunk-color>
+                        <splunk-color>#919191</splunk-color>
+                        <splunk-color>#5E5E5E</splunk-color>
+                        <splunk-color>#000000</splunk-color>
+                        <splunk-color>#53a051</splunk-color>
+                        <splunk-color>#dc4d41</splunk-color>
+                        <splunk-color>#d16f18</splunk-color>
+                        <splunk-color>#009DD9</splunk-color>
+                        <splunk-color>#ebb839</splunk-color>
+                        <splunk-color>#1a9035</splunk-color>
+                        <splunk-color>#b22b32</splunk-color>
+                        <splunk-color>#AF5300</splunk-color>
+                        <splunk-color>#0178c7</splunk-color>
+                        <splunk-color>#ecbc1b</splunk-color>
+                </splunk-color-picker>
+        </splunk-control-group>
+
+</form>
+
+
+<form class="splunk-formatter-section" section-label="Sparkline">
+        <splunk-control-group label="Display" help="">
+                <splunk-radio-input name="{{VIZ_NAMESPACE}}.sparkorder" value="yes">
+                        <option value="yes">Show</option>
+                        <option value="no">Hide</option>
+                </splunk-radio-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Type" help="">
+                <splunk-radio-input name="{{VIZ_NAMESPACE}}.sparkstyle" value="area">
+                        <option value="area">Area</option>
+                        <option value="line">Line</option>
+                        <option value="column">Column</option>
+                        <option value="status">Status</option>
+                </splunk-radio-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Null values" help="">
+                <splunk-radio-input name="{{VIZ_NAMESPACE}}.sparknulls" value="gaps">
+                        <option value="gaps">Gaps</option>
+                        <option value="zero">Zero</option>
+                        <option value="span">Connect</option>
+                </splunk-radio-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Line color" help="">
+                <splunk-select name="{{VIZ_NAMESPACE}}.sparkcolormodeline" value="darker2" style="vertical-align:top; display:inline-block; width:90px; margin-right:10px;">
+                        <option value="static">Manual</option>
+                        <option value="lighter3">Threshold color (40% lighter)</option>
+                        <option value="lighter2">Threshold color (20% lighter)</option>
+                        <option value="lighter1">Threshold color (10% lighter)</option>
+                        <option value="auto">Threshold color</option>
+                        <option value="darker1">Threshold color (10% darker)</option>
+                        <option value="darker2">Threshold color (20% darker)</option>
+                        <option value="darker3">Threshold color (40% darker)</option>
+                </splunk-select>
+                <splunk-color-picker name="{{VIZ_NAMESPACE}}.sparkcolorline" value="#0178c7" type="splunkCategorical" style="vertical-align:top; display:inline-block; margin-top: -2px;">
+                        <splunk-color>#ffffff</splunk-color>
+                        <splunk-color>#C6C6C6</splunk-color>
+                        <splunk-color>#919191</splunk-color>
+                        <splunk-color>#5E5E5E</splunk-color>
+                        <splunk-color>#000000</splunk-color>
+                        <splunk-color>#53a051</splunk-color>
+                        <splunk-color>#dc4d41</splunk-color>
+                        <splunk-color>#d16f18</splunk-color>
+                        <splunk-color>#009DD9</splunk-color>
+                        <splunk-color>#ebb839</splunk-color>
+                        <splunk-color>#1a9035</splunk-color>
+                        <splunk-color>#b22b32</splunk-color>
+                        <splunk-color>#AF5300</splunk-color>
+                        <splunk-color>#0178c7</splunk-color>
+                        <splunk-color>#ecbc1b</splunk-color>
+                </splunk-color-picker>
+        </splunk-control-group>
+
+        <splunk-control-group label="Fill color" help="">
+                <splunk-select name="{{VIZ_NAMESPACE}}.sparkcolormodefill" value="darker1" style="vertical-align:top; display:inline-block; width:90px; margin-right:10px;">
+                        <option value="static">Manual</option>
+                        <option value="lighter3">Threshold color (40% lighter)</option>
+                        <option value="lighter2">Threshold color (20% lighter)</option>
+                        <option value="lighter1">Threshold color (10% lighter)</option>
+                        <option value="auto">Threshold color</option>
+                        <option value="darker1">Threshold color (10% darker)</option>
+                        <option value="darker2">Threshold color (20% darker)</option>
+                        <option value="darker3">Threshold color (40% darker)</option>
+                </splunk-select>
+                <splunk-color-picker name="{{VIZ_NAMESPACE}}.sparkcolorfill" value="#009DD9" type="splunkCategorical" style="vertical-align:top; display:inline-block; margin-top: -2px;">
+                        <splunk-color>#ffffff</splunk-color>
+                        <splunk-color>#C6C6C6</splunk-color>
+                        <splunk-color>#919191</splunk-color>
+                        <splunk-color>#5E5E5E</splunk-color>
+                        <splunk-color>#000000</splunk-color>
+                        <splunk-color>#53a051</splunk-color>
+                        <splunk-color>#dc4d41</splunk-color>
+                        <splunk-color>#d16f18</splunk-color>
+                        <splunk-color>#009DD9</splunk-color>
+                        <splunk-color>#ebb839</splunk-color>
+                        <splunk-color>#1a9035</splunk-color>
+                        <splunk-color>#b22b32</splunk-color>
+                        <splunk-color>#AF5300</splunk-color>
+                        <splunk-color>#0178c7</splunk-color>
+                        <splunk-color>#ecbc1b</splunk-color>
+                </splunk-color-picker>
+        </splunk-control-group>
+
+        <splunk-control-group label="Limits" help="">
+                <span style="display:inline-block; margin:5px;">min</span>
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.sparkmin" value="0" style="width: 32px; vertical-align:top; display:inline-block; flex:none; margin-right:26px;"></splunk-text-input>
+                <span style="display:inline-block; margin:5px;">max</span>
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.sparkmax" value="" style="width: 32px; vertical-align:top; display:inline-block; flex:none; margin-right:26px;"></splunk-text-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Left position" help="As percentage of width." help="">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.sparkalign" value="0" style="width:64px; vertical-align:top; display:inline-block; flex:none; margin-right:4px;"></splunk-text-input>
+                <span style="display:inline-block; margin:5px 15px 5px 5px;">%</span>
+        </splunk-control-group>
+
+        <splunk-control-group label="Top position" help="As percentage of height." help="">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.sparkalignv" value="70" style="width:64px; vertical-align:top; display:inline-block; flex:none; margin-right:4px;"></splunk-text-input>
+                <span style="display:inline-block; margin:5px 15px 5px 5px;">%</span>
+        </splunk-control-group>
+
+        <splunk-control-group label="Width" help="As percentage of width." help="">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.sparkWidth" value="100" style="width:64px; vertical-align:top; display:inline-block; flex:none; margin-right:4px;"></splunk-text-input>
+                <span style="display:inline-block; margin:5px 15px 5px 5px;">%</span>
+        </splunk-control-group>
+        
+        <splunk-control-group label="Height" help="As percentage of height." help="">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.sparkHeight" value="30" style="width:64px; vertical-align:top; display:inline-block; flex:none; margin-right:4px;"></splunk-text-input>
+                <span style="display:inline-block; margin:5px 15px 5px 5px;">%</span>
+        </splunk-control-group>
+</form>
+
+
+<form class="splunk-formatter-section" section-label="Value">
+        <splunk-control-group label="Color" help="">
+                <splunk-select name="{{VIZ_NAMESPACE}}.textmode" value="static" style="vertical-align:top; display:inline-block; width:90px; margin-right:10px;">
+                        <option value="static">Manual</option>
+                        <option value="lighter3">Threshold color (40% lighter)</option>
+                        <option value="lighter2">Threshold color (20% lighter)</option>
+                        <option value="lighter1">Threshold color (10% lighter)</option>
+                        <option value="auto">Threshold color</option>
+                        <option value="darker1">Threshold color (10% darker)</option>
+                        <option value="darker2">Threshold color (20% darker)</option>
+                        <option value="darker3">Threshold color (40% darker)</option>
+                </splunk-select>
+                <splunk-color-picker name="{{VIZ_NAMESPACE}}.textcolor" value="#ffffff" type="splunkCategorical" style="vertical-align:top; display:inline-block; margin-top: -2px;">
+                        <splunk-color>#ffffff</splunk-color>
+                        <splunk-color>#C6C6C6</splunk-color>
+                        <splunk-color>#919191</splunk-color>
+                        <splunk-color>#5E5E5E</splunk-color>
+                        <splunk-color>#000000</splunk-color>
+                        <splunk-color>#53a051</splunk-color>
+                        <splunk-color>#dc4d41</splunk-color>
+                        <splunk-color>#d16f18</splunk-color>
+                        <splunk-color>#009DD9</splunk-color>
+                        <splunk-color>#ebb839</splunk-color>
+                        <splunk-color>#1a9035</splunk-color>
+                        <splunk-color>#b22b32</splunk-color>
+                        <splunk-color>#AF5300</splunk-color>
+                        <splunk-color>#0178c7</splunk-color>
+                        <splunk-color>#ecbc1b</splunk-color>
+                </splunk-color-picker>
+        </splunk-control-group>
+
+        <splunk-control-group label="Position" help="">
+                <splunk-radio-input name="{{VIZ_NAMESPACE}}.textalign" value="center">
+                        <option value="hide">Hide</option>
+                        <option value="left">Left</option>
+                        <option value="center">Center</option>
+                        <option value="right">Right</option>
+                </splunk-radio-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Top position" help="As percentage of height.">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.textalignv" value="50" style="width:64px; vertical-align:top; display:inline-block; flex:none; margin-right:4px;"></splunk-text-input>
+                <span style="display:inline-block; margin:5px 15px 5px 5px;">%</span>
+        </splunk-control-group>
+        
+        <splunk-control-group label="Size scale" help="">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.textsize" value="140" style="width:64px; vertical-align:top; display:inline-block; flex:none; margin-right:4px;"></splunk-text-input>
+                <span style="display:inline-block; margin:5px 15px 5px 5px;">%</span>
+        </splunk-control-group>
+
+        <splunk-control-group label="Precision" help="">
+                <splunk-select name="{{VIZ_NAMESPACE}}.textprecision" value="1">
+                        <option value="nolimit">Not set</option>
+                        <option value="1">0</option>
+                        <option value="2">0.0</option>
+                        <option value="3">0.00</option>
+                        <option value="4">0.000</option>
+                        <option value="5">0.0000</option>
+                        <option value="6">0.00000</option>
+                </splunk-select>
+        </splunk-control-group>
+
+        <splunk-control-group label="Processing" help="">
+                <splunk-select name="{{VIZ_NAMESPACE}}.textprocessing" value="">
+                        <option value="">None</option>
+                        <option value="thou">Add thousands seperators</option>
+                        <option value="abr1">Abreviate with no decimals</option>
+                        <option value="abr2">Abreviate with up to 1 decimal</option>
+                        <option value="abr3">Abreviate with up to 2 decimals</option>
+                        <option value="abr4">Abreviate with up to 3 decimals</option>
+                </splunk-select>
+        </splunk-control-group>
+
+        <splunk-control-group label="Unit" help="">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.textunit" value=""></splunk-text-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Unit scale" help="">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.textunitsize" value="50" style="width:64px; vertical-align:top; display:inline-block; flex:none; margin-right:4px;"></splunk-text-input>
+                <span style="display:inline-block; margin:5px 15px 5px 5px;">%</span>
+        </splunk-control-group>
+
+        <splunk-control-group label="Unit position" help="">
+                <splunk-select name="{{VIZ_NAMESPACE}}.textunitposition" value="after">
+                        <option value="before">Before</option>
+                        <option value="after">After</option>
+                        <option value="afterabs">After (floating)</option>
+                        <option value="under">Under</option>
+                </splunk-select>
+        </splunk-control-group>
+
+        <splunk-control-group label="Font" help="">
+                <splunk-select name="{{VIZ_NAMESPACE}}.textfont" value="">
+                        <option value="number_display_viz-thin">Regular</option>
+                        <option value="">Bold</option>
+                        <option value="number_display_viz-font1">Teko</option>
+                        <option value="number_display_viz-font2">Montserrat</option>
+                        <option value="number_display_viz-font3">Luckiest Guy</option>
+                        <option value="number_display_viz-font4">Roboto 300</option>
+                        <option value="number_display_viz-font5">Roboto 400</option>
+                </splunk-select>
+        </splunk-control-group>
+
+
+        <splunk-control-group label="Drop shadow" help="">
+                <splunk-radio-input name="{{VIZ_NAMESPACE}}.textdrop" value="yes" style="width:130px; vertical-align:top; display:inline-block; flex:none; margin-right:4px;">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                </splunk-radio-input>
+                <splunk-color-picker name="{{VIZ_NAMESPACE}}.textdropcolor" value="#000000" type="splunkCategorical" style="vertical-align:top; display:inline-block; margin-top: -2px;">
+                        <splunk-color>#ffffff</splunk-color>
+                        <splunk-color>#C6C6C6</splunk-color>
+                        <splunk-color>#919191</splunk-color>
+                        <splunk-color>#5E5E5E</splunk-color>
+                        <splunk-color>#000000</splunk-color>
+                        <splunk-color>#53a051</splunk-color>
+                        <splunk-color>#dc4d41</splunk-color>
+                        <splunk-color>#d16f18</splunk-color>
+                        <splunk-color>#009DD9</splunk-color>
+                        <splunk-color>#ebb839</splunk-color>
+                        <splunk-color>#1a9035</splunk-color>
+                        <splunk-color>#b22b32</splunk-color>
+                        <splunk-color>#AF5300</splunk-color>
+                        <splunk-color>#0178c7</splunk-color>
+                        <splunk-color>#ecbc1b</splunk-color>
+                </splunk-color-picker>
+        </splunk-control-group>
+</form>
+
+
+
+<form class="splunk-formatter-section" section-label="Title">
+        <splunk-control-group label="Text" help="">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.titletext" value=""></splunk-text-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Left position" help="">
+                <splunk-radio-input name="{{VIZ_NAMESPACE}}.titlealign" value="center">
+                        <option value="hide">Hide</option>
+                        <option value="left">Left</option>
+                        <option value="center">Center</option>
+                        <option value="right">Right</option>
+                </splunk-radio-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Top position" help="As percentage of height.">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.titlealignv" value="18" style="width:64px; vertical-align:top; display:inline-block; flex:none; margin-right:4px;"></splunk-text-input>
+                <span style="display:inline-block; margin:5px 15px 5px 5px;">%</span>
+        </splunk-control-group>
+
+        <splunk-control-group label="Size scale" help="">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.titlesize" value="70" style="width:64px; vertical-align:top; display:inline-block; flex:none; margin-right:4px;"></splunk-text-input>
+                <span style="display:inline-block; margin:5px 15px 5px 5px;">%</span>
+        </splunk-control-group>
+
+        <splunk-control-group label="Color" help="">
+                <splunk-select name="{{VIZ_NAMESPACE}}.titlecolormode" value="static" style="vertical-align:top; display:inline-block; width:90px; margin-right:10px;">
+                        <option value="static">Manual</option>
+                        <option value="lighter3">Threshold color (40% lighter)</option>
+                        <option value="lighter2">Threshold color (20% lighter)</option>
+                        <option value="lighter1">Threshold color (10% lighter)</option>
+                        <option value="auto">Threshold color</option>
+                        <option value="darker1">Threshold color (10% darker)</option>
+                        <option value="darker2">Threshold color (20% darker)</option>
+                        <option value="darker3">Threshold color (40% darker)</option>
+                </splunk-select>
+                <splunk-color-picker name="{{VIZ_NAMESPACE}}.titlecolor" value="#ffffff" type="splunkCategorical" style="vertical-align:top; display:inline-block; margin-top: -2px; ">
+                        <splunk-color>#ffffff</splunk-color>
+                        <splunk-color>#C6C6C6</splunk-color>
+                        <splunk-color>#919191</splunk-color>
+                        <splunk-color>#5E5E5E</splunk-color>
+                        <splunk-color>#000000</splunk-color>
+                        <splunk-color>#53a051</splunk-color>
+                        <splunk-color>#dc4d41</splunk-color>
+                        <splunk-color>#d16f18</splunk-color>
+                        <splunk-color>#009DD9</splunk-color>
+                        <splunk-color>#ebb839</splunk-color>
+                        <splunk-color>#1a9035</splunk-color>
+                        <splunk-color>#b22b32</splunk-color>
+                        <splunk-color>#AF5300</splunk-color>
+                        <splunk-color>#0178c7</splunk-color>
+                        <splunk-color>#ecbc1b</splunk-color>
+                </splunk-color-picker>
+        </splunk-control-group>
+
+        <splunk-control-group label="Font" help="">
+                <splunk-select name="{{VIZ_NAMESPACE}}.titlefont" value="">
+                        <option value="number_display_viz-thin">Regular</option>
+                        <option value="">Bold</option>
+                        <option value="number_display_viz-font1">Teko</option>
+                        <option value="number_display_viz-font2">Montserrat</option>
+                        <option value="number_display_viz-font3">Luckiest Guy</option>
+                        <option value="number_display_viz-font4">Roboto 300</option>
+                        <option value="number_display_viz-font5">Roboto 400</option>
+                </splunk-select>
+        </splunk-control-group>
+
+        <splunk-control-group label="Drop shadow" help="">
+                <splunk-radio-input name="{{VIZ_NAMESPACE}}.titledrop" value="no" style="width:130px; vertical-align:top; display:inline-block; flex:none; margin-right:4px;">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                </splunk-radio-input>
+                <splunk-color-picker name="{{VIZ_NAMESPACE}}.titledropcolor" value="#000000" type="splunkCategorical" style="vertical-align:top; display:inline-block; margin-top: -2px;">
+                        <splunk-color>#ffffff</splunk-color>
+                        <splunk-color>#C6C6C6</splunk-color>
+                        <splunk-color>#919191</splunk-color>
+                        <splunk-color>#5E5E5E</splunk-color>
+                        <splunk-color>#000000</splunk-color>
+                        <splunk-color>#53a051</splunk-color>
+                        <splunk-color>#dc4d41</splunk-color>
+                        <splunk-color>#d16f18</splunk-color>
+                        <splunk-color>#009DD9</splunk-color>
+                        <splunk-color>#ebb839</splunk-color>
+                        <splunk-color>#1a9035</splunk-color>
+                        <splunk-color>#b22b32</splunk-color>
+                        <splunk-color>#AF5300</splunk-color>
+                        <splunk-color>#0178c7</splunk-color>
+                        <splunk-color>#ecbc1b</splunk-color>
+                </splunk-color-picker>
+        </splunk-control-group>
+</form>
+
+
+<form class="splunk-formatter-section" section-label="Subtitle">
+        <splunk-control-group label="Text" help="">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.subtitletext" value=""></splunk-text-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Left position" help="">
+                <splunk-radio-input name="{{VIZ_NAMESPACE}}.subtitlealign" value="center">
+                        <option value="hide">Hide</option>
+                        <option value="left">Left</option>
+                        <option value="center">Center</option>
+                        <option value="right">Right</option>
+                </splunk-radio-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Top position" help="As percentage of height.">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.subtitlealignv" value="80" style="width:64px; vertical-align:top; display:inline-block; flex:none; margin-right:4px;"></splunk-text-input>
+                <span style="display:inline-block; margin:5px 15px 5px 5px;">%</span>
+        </splunk-control-group>
+
+        <splunk-control-group label="Size scale" help="">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.subtitlesize" value="50" style="width:64px; vertical-align:top; display:inline-block; flex:none; margin-right:4px;"></splunk-text-input>
+                <span style="display:inline-block; margin:5px 15px 5px 5px;">%</span>
+        </splunk-control-group>
+
+        <splunk-control-group label="Color" help="">
+                <splunk-select name="{{VIZ_NAMESPACE}}.subtitlecolormode" value="static" style="vertical-align:top; display:inline-block; width:90px; margin-right:10px;">
+                        <option value="static">Manual</option>
+                        <option value="lighter3">Threshold color (40% lighter)</option>
+                        <option value="lighter2">Threshold color (20% lighter)</option>
+                        <option value="lighter1">Threshold color (10% lighter)</option>
+                        <option value="auto">Threshold color</option>
+                        <option value="darker1">Threshold color (10% darker)</option>
+                        <option value="darker2">Threshold color (20% darker)</option>
+                        <option value="darker3">Threshold color (40% darker)</option>
+                </splunk-select>
+                <splunk-color-picker name="{{VIZ_NAMESPACE}}.subtitlecolor" value="#ffffff" type="splunkCategorical" style="vertical-align:top; display:inline-block; margin-top: -2px; ">
+                        <splunk-color>#ffffff</splunk-color>
+                        <splunk-color>#C6C6C6</splunk-color>
+                        <splunk-color>#919191</splunk-color>
+                        <splunk-color>#5E5E5E</splunk-color>
+                        <splunk-color>#000000</splunk-color>
+                        <splunk-color>#53a051</splunk-color>
+                        <splunk-color>#dc4d41</splunk-color>
+                        <splunk-color>#d16f18</splunk-color>
+                        <splunk-color>#009DD9</splunk-color>
+                        <splunk-color>#ebb839</splunk-color>
+                        <splunk-color>#1a9035</splunk-color>
+                        <splunk-color>#b22b32</splunk-color>
+                        <splunk-color>#AF5300</splunk-color>
+                        <splunk-color>#0178c7</splunk-color>
+                        <splunk-color>#ecbc1b</splunk-color>
+                </splunk-color-picker>
+        </splunk-control-group>
+
+        <splunk-control-group label="Font" help="">
+                <splunk-select name="{{VIZ_NAMESPACE}}.subtitlefont" value="">
+                        <option value="number_display_viz-thin">Regular</option>
+                        <option value="">Bold</option>
+                        <option value="number_display_viz-font1">Teko</option>
+                        <option value="number_display_viz-font2">Montserrat</option>
+                        <option value="number_display_viz-font3">Luckiest Guy</option>
+                        <option value="number_display_viz-font4">Roboto 300</option>
+                        <option value="number_display_viz-font5">Roboto 400</option>
+                </splunk-select>
+        </splunk-control-group>
+
+        <splunk-control-group label="Drop shadow" help="">
+                <splunk-radio-input name="{{VIZ_NAMESPACE}}.subtitledrop" value="no" style="width:130px; vertical-align:top; display:inline-block; flex:none; margin-right:4px;">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                </splunk-radio-input>
+                <splunk-color-picker name="{{VIZ_NAMESPACE}}.subtitledropcolor" value="#000000" type="splunkCategorical" style="vertical-align:top; display:inline-block; margin-top: -2px;">
+                        <splunk-color>#ffffff</splunk-color>
+                        <splunk-color>#C6C6C6</splunk-color>
+                        <splunk-color>#919191</splunk-color>
+                        <splunk-color>#5E5E5E</splunk-color>
+                        <splunk-color>#000000</splunk-color>
+                        <splunk-color>#53a051</splunk-color>
+                        <splunk-color>#dc4d41</splunk-color>
+                        <splunk-color>#d16f18</splunk-color>
+                        <splunk-color>#009DD9</splunk-color>
+                        <splunk-color>#ebb839</splunk-color>
+                        <splunk-color>#1a9035</splunk-color>
+                        <splunk-color>#b22b32</splunk-color>
+                        <splunk-color>#AF5300</splunk-color>
+                        <splunk-color>#0178c7</splunk-color>
+                        <splunk-color>#ecbc1b</splunk-color>
+                </splunk-color-picker>
+        </splunk-control-group>
+</form>
+
+<form class="splunk-formatter-section" section-label="Advanced">
+
+        <splunk-control-group label="Absolute positioning" help="Allows dragging items. The size of items is set in General > Item Height min.">
+                <splunk-radio-input name="{{VIZ_NAMESPACE}}.absolute" value="no">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                </splunk-radio-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Precision">
+                <splunk-radio-input name="{{VIZ_NAMESPACE}}.coarse_positions" value="no">
+                        <option value="yes">Coarse</option>
+                        <option value="no">Precise</option>
+                </splunk-radio-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Positions" help="Paste copied string here">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.positions" value=""></splunk-text-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Lock width" help="Leave blank for 100% width. Set an explicit width for consistent results on different screen sizes">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.width" value="" style="width: 64px;  vertical-align:top; display:inline-block; flex: none;"></splunk-text-input>
+                <span style="display:inline-block; margin:5px 15px 5px 5px;">px</span>
+        </splunk-control-group>
+
+        <splunk-control-group label="Background image" help="See documentation for examples">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.background" value=""></splunk-text-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Animation" help="">
+                <splunk-radio-input name="{{VIZ_NAMESPACE}}.animation" value="yes">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                </splunk-radio-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Item shadow" help="">
+                <splunk-radio-input name="{{VIZ_NAMESPACE}}.shadows" value="no">
+                        <option value="no">No</option>
+                        <option value="dark">Dark</option>
+                        <option value="light">Light</option>
+                </splunk-radio-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Item radius" help="Set to 50% for a circle">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.radius" value="0" style="width: 64px;  vertical-align:top; display:inline-block; flex: none;"></splunk-text-input>
+                <span style="display:inline-block; margin:5px 15px 5px 5px;">%</span>
+        </splunk-control-group>
+
+        <splunk-control-group label="Allow HTML" help="">
+                <splunk-radio-input name="{{VIZ_NAMESPACE}}.labels_as_html" value="no">
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                </splunk-radio-input>
+        </splunk-control-group>
+
+        <splunk-control-group label="Max items" help="Max records safety latch">
+                <splunk-text-input name="{{VIZ_NAMESPACE}}.maxrows" value="200" style="width: 64px;  vertical-align:top; display:inline-block; flex: none;"></splunk-text-input>
+        </splunk-control-group>
+</form>
+
+<form class="splunk-formatter-section" section-label="Help">
+        <splunk-control-group help="">
+        <div style="margin:40px 10px 10px -100px">
+                <div>Recognised field names: <code>title</code>, <code>value</code>, <code>sparkline</code>, <code>text</code>, <code>subtitle</code>, <code>color</code>, <code>bgcolor</code>, <code>thresholdcolor1..6</code>, <code>thresholdvalue1..6</code></div>
+                <div>Extra fields in absolute mode: <code>height</code>, <code>width</code>, <code>id</code>
+                
+                <div style="margin-top:30px;">Example queries:</div>
+                <div style="margin-top:10px;"><code>... | table title value</code></div>
+                <div>or</div>
+                <div><code>... | stats avg(value) as value sparkline(avg(value)) as sparkline by title</code></div>
+                <div style="margin-top:30px;"><a href="/app/number_set_viz/documentation" target="_blank">Examples and Documentation</a></div>
+                <div style="margin-top:40px;">By Chris Younger - <a href="https://splunkbase.splunk.com/apps/#/author/chrisyoungerjds" target="_blank">My other apps</a></div>
+        </div> 
+        </splunk-control-group>
+</form>

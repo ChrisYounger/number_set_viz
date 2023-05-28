@@ -1,0 +1,565 @@
+<form version="1.1" theme="light" hideAppBar="true">
+  <label>Number Set Viz - Documentation</label>
+  <search id="base1">
+    <query>| gentimes start=-30 end=0 increment=12h | rename starttime as _time | fields + _time | eval myValue=random()%500 | stats sparkline(avg(myValue)) as overtime| eval text="42"</query>
+    <earliest>-30d</earliest>
+    <latest>now</latest>
+    <sampleRatio>1</sampleRatio>
+  </search>
+  <fieldset submitButton="false"></fieldset>
+  <row>
+    <panel>
+      <input type="link" token="tab" id="my_pillnavs">
+        <label></label>
+        <choice value="page1">Documentation</choice>
+        <choice value="page2">Example 1</choice>
+        <choice value="page3">Example 2</choice>
+        <choice value="page4">Example 3</choice>
+        <change>
+          <condition value="page1">
+            <set token="showpage1"></set>
+            <unset token="showpage2"></unset>
+            <unset token="showpage3"></unset>
+            <unset token="showpage4"></unset>
+          </condition>
+          <condition value="page2">
+            <unset token="showpage1"></unset>
+            <set token="showpage2"></set>
+            <unset token="showpage3"></unset>
+            <unset token="showpage4"></unset>
+          </condition>
+          <condition value="page3">
+            <unset token="showpage1"></unset>
+            <unset token="showpage2"></unset>
+            <set token="showpage3"></set>
+            <unset token="showpage4"></unset>
+          </condition>
+          <condition value="page4">
+            <unset token="showpage1"></unset>
+            <unset token="showpage2"></unset>
+            <unset token="showpage3"></unset>
+            <set token="showpage4"></set>
+          </condition>
+        </change>
+        <default>page1</default>
+      </input>
+    </panel>
+    <panel depends="$never_match$">
+      <html>
+        Some inline CSS styles are in this panel.
+        <style>#my_pillnavs {width: 500px !important}</style>
+      </html>
+    </panel>
+  </row>
+  <row depends="$showpage1$">
+    <panel>
+      <html>
+<style>
+.table td, .table th {
+  vertical-align: middle;
+}
+.number_sit_viz li {
+  margin-bottom: 12px;
+}
+</style>
+<div class="number_sit_viz" style="max-width: 1200px; margin: 0 auto;">
+<h2>Number Set Viz</h2>
+<p>A visualization for Splunk that displays a collection of numbers in a grid or absolute layout.</p>
+<p>
+Copyright (C) 2023 Chris Younger | <a href="https://github.com/ChrisYounger/number_set_viz">Source code</a> | <a href="https://splunkbase.splunk.com/app//">Splunkbase</a> | <a href="https://answers.splunk.com/app/questions/.html">Questions, Bugs or Suggestions</a> | <a href="https://splunkbase.splunk.com/apps/#/author/chrisyoungerjds">My Splunk apps</a>
+          </p>
+<br/>
+<br/>
+<br/>
+
+<h2>Usage</h2>
+<p>This visualization expects data that has specific field names: "value", "title" and "sparkline".</p>
+<pre class="highlight">
+<code>|stats sparkline(avg(SOME_VALUE)) as sparkline latest(SOME_VALUE) as value</code>
+</pre>
+
+
+<p>For multiple items do this: </p>
+<pre class="highlight">
+<code>| rename SPLIT_CATEGORY as title | stats sparkline(avg(SOME_VALUE)) as sparkline latest(SOME_VALUE) as value BY title</code>
+</pre>
+
+
+<p>The configured viz properties can be overridden by specifically named data fields.</p>
+<p>Here is an example where the subtitle is supplied in the data:</p>
+<pre class="highlight">
+<code>| rename SPLIT_CATEGORY as title | stats sparkline(avg(SOME_VALUE)) as sparkline latest(SOME_VALUE) as value latest(SOME_VALUE2) as subtext BY title</code>
+</pre>
+
+
+<p>another way of doing the same thing is like so: </p>
+<pre class="highlight">
+<code>| rename SPLIT_CATEGORY as title | stats sparkline(avg(SOME_VALUE)) as sparkline latest(SOME_VALUE) as value BY title | eval subtext = "something"</code>
+</pre>
+
+
+<p>These are the fields that can be provided in data:</p>
+<table class="table">
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+                  <code>value</code>
+                </td>
+<td>Numeric</td>
+<td>The value which will be used for threshold calculation and to set the gauge position or spinner speed. Viz will attempt to guess this field if not explicity supplied.</td>
+</tr>
+<tr>
+<td>
+                  <code>title</code>
+                </td>
+<td>String</td>
+<td>The title of the metric which will be shown as a text overlay. Viz will attempt to guess this field if not explicity supplied.</td>
+</tr>
+<tr>
+<td>
+                  <code>sparkline</code>
+                </td>
+<td>sparkline array</td>
+<td>The sparkline field to use as the area or line chart overlay. Viz will attempt to guess this field if not explicity supplied.</td>
+</tr>
+<tr>
+<td>
+                  <code>id</code>
+                </td>
+<td>String</td>
+<td>This is required in Abosolute mode. It should be a unique string for each data item as this is how the visualization will know where to position items.</td>
+</tr>
+<tr>
+<td>
+                  <code>color</code>
+                </td>
+<td>HTML color code</td>
+<td>Set the threshold color (ignoring thresholds calculations). By using this field you can use any threshold logic you like in the search query.</td>
+</tr>
+<tr>
+<td>
+                  <code>height</code>
+                </td>
+<td>Numeric</td>
+<td>(Absolute mode only) Allows you to specify the item height in pixels. If not set, then will be calculated automatically based on the Format-menu settings.</td>
+</tr>
+<tr>
+<td>
+                  <code>width</code>
+                </td>
+<td>Numeric</td>
+<td>(Absolute mode only) Allows you to specify the item width in pixels. If not set, then will be calculated automatically based on the Format-menu settings.</td>
+</tr>
+<tr>
+<td>
+                  <code>bgcolor</code>
+                </td>
+<td>HTML color code</td>
+<td>Similar to above but will only overide the background color. The threshold color can still be used by other components.</td>
+</tr>
+<tr>
+<td>
+                  <code>text</code>
+                </td>
+<td>String</td>
+<td>If supplied, this field enables overriding what would be shown as the numeric value.</td>
+</tr>
+<tr>
+<td>
+                  <code>subtitle</code>
+                </td>
+<td>String</td>
+<td>Override the subtitle value. Note that subtitle must be blank in the formatting options</td>
+</tr>
+<tr>
+<td>
+                  <code>thresholdvalue1</code>..<code>6</code>
+                </td>
+<td>Number</td>
+<td>Overrides the specified threshold value</td>
+</tr>
+<tr>
+<td>
+                  <code>thresholdcolor1</code>..<code>6</code>
+                </td>
+<td>HTML color code</td>
+<td>Overrides the specified threshold color</td>
+</tr>
+<tr>
+<td>
+                  <code>info_min_time</code>/<code>info_max_time</code>
+                </td>
+<td>Epoch time</td>
+<td>(Experimental) Can be added using the <code>|addinfo</code> command. If supplied the sparkline will show date/times in the tooltip. The accuracy of this is questionable becuase of Splunk sparkline limitations.</td>
+</tr>
+</tbody>
+</table>
+<br/>
+<br/>
+<br/>
+
+
+<h2>Formatting options</h2>
+<p>
+            <img alt="" src="/static/app/number_set_viz/visualizations/number_set_viz/format_menu1.png" style="float:left; margin-right:60px; margin-bottom:40px;" />
+          </p>
+<ol>
+<li>Set the min/max height. The visualization will use the largest size that will fit into the space available. If the items can't fit, a scrollbar will be displayed. Note that in Absolute mode items will be set to the min size (unless otherwise overridden in the data by the height/width fields)</li>
+<li>Set the minimum blank space margin between items. </li>
+<li>Set thresholds and leave any blank that are not needed. If you need more thresholds or non-numeric thresholds then compute them in the search query and pass the color as the <code>color</code> field.</li>
+<li>
+<p>To show a sparkline, then be sure to pass in sparkline data. Use <code>| stats sparkline(AGG_FUNCTION(VALUE))</code></p>
+<p>There is a special sparkline mode called "Status". When this is selected you should pass in sparkline field that contains values that map to statuses: &gt;= 6 (Error) &gt;= 4 (Warning) &gt;= 2 (Good) &gt;= 0 (Informational) &lt; 0 (Unknown) -  This is the compatable with the internal codes used by ITSI.</p>
+</li>
+<li>
+<p>The Text, Title, Subtitle tabs allow for configuring how text overlays are applied. They are all kind of the same except the text value can have a unit prefix/suffix.</p>
+<ul>
+<li>The Title and Subtitle options should be left blank to use values from the data instead.</li>
+<li>Advanced font styles are hosted by Google Fonts so these won't work unless the viewer has an internet connection.</li>
+</ul>
+</li>
+</ol>
+
+<p style="clear:both;">
+            <img alt="" src="/static/app/number_set_viz/visualizations/number_set_viz/format_menu2.png" style="float:left; margin-right:60px; margin-bottom:20px;" />
+          </p>
+<ol>
+<li>Absolute mode allow you to drag items around the canvas and place them where you want. You need to make sure your data includes an "id" field (for many situations this can be a copy of the 'title' field <code>| eval id = title</code>).</li>
+<li>When you drag items around, a button will display "Copy positions to clipboard". Click this button and then paste the string (CTRL-V) into the 'Positions' textbox. This is how the visualization will know where to place items the next time it loads.</li>
+<li>Lock width should be used whenever using absolute mode. Otherwise items might not be positioned properly when dashboard viewers with different screen sizes view the dashboard.</li>
+<li>Background image is a URL to an image to show behind the items. You can upload a backgound image to any app (Apps &gt; Manage Apps &gt; Select App &gt; Edit Properties &gt; Upload Asset OR Use <a href="https://splunkbase.splunk.com/app/4353" target="_blank">Config Explorer</a> to upload the file to <code>etc/apps/APPNAME/appserver/static/</code>) and then access the file as <code>/static/app/APPNAME/FILENAME.PNG</code>. Alternativly you can use the full URL to an image hosted anywhere that your dashboard viewers can access (e.g. https://example.com/image.png).</li>
+<li>Background image is a URL to an image to show behind the items. You can upload a backgound image to any app (Apps &gt; Manage Apps &gt; Select App &gt; Edit Properties &gt; Upload Asset OR Use <a href="https://splunkbase.splunk.com/app/4353" target="_blank">Config Explorer</a> to upload the file to <code>etc/apps/APPNAME/appserver/static/</code>) and then access the file as <code>/static/app/APPNAME/FILENAME.PNG</code>. Alternativly you can use the full URL to an image hosted anywhere that your dashboard viewers can access (e.g. https://example.com/image.png).</li>
+<li>Allow HTML will mean that HTML snippets can be passed in data fields (text, title, subtitle) and it will be rendered as HTML</li>
+</ol>
+<br/>
+<br/>
+<br/>
+
+
+<h2 style="clear:both;">Icons</h2>
+The title, <code>text</code>, or <code>subtitle</code> fields can allow for HTML injection (Format-menu &gt; Advanced &gt; Allow HTML). This allows icons to be used in place of text or numbers. <br/>
+Any icon from the FontAwesome v5 Free icon sets can be used, the complete list is here: <a href="https://fontawesome.com/cheatsheet/">https://fontawesome.com/cheatsheet/</a>
+          <br/>
+There are also some Splunk built-in icons that can be used. See the list at the following page of your Splunk environment: <code>/en-GB/static/docs/style/style-guide.html#icons</code>
+          <br/>
+Here is an example showing an icon being displayed:
+<pre class="highlight">
+            <code>|stats sparkline(avg(SOME_VALUE)) as Sparkline latest(SOME_VALUE) as Value by SPLIT_CATEGORY | eval text="&lt;i class='fas fa-check'&gt;&lt;/i&gt;"</code>
+          </pre>
+
+
+<br/>
+<br/>
+<br/>
+
+<h2>Custom fonts</h2>
+<p>It is possible to use custom fonts (hosted on the internet) by overriding specific CSS classes in a HTML panel: <code>.number_display_viz-font1</code> .. <code>font5</code>. </p>
+<p>Example:</p>
+<pre class="highlight">
+<code>&lt;html&gt;
+&lt;style&gt;
+@import url('https://fonts.googleapis.com/css?family=Teko:700&amp;display=swap');
+.number_display_viz-font1 {
+    font-family: 'Teko', sans-serif !important;
+    font-weight: 700 !important;
+}
+&lt;/style&gt;
+&lt;/html&gt;</code>
+</pre>
+<br/>
+<br/>
+<br/>
+
+<h2>Drilldowns and tokens</h2>
+<p>As long as there is a "title" field (explicity supplied or guessed) then drilldowns will be enabled. All data fields are automatically created as tokens when clicked, named like so: <code>$row.&lt;fieldname&gt;$</code>. Tokens <code>$click.name$</code> and <code>$click.value$</code> are also created. <em>Drilldown to search</em> also works as normal. To see what tokens are being set, open the browser developer tool (F12) and look at the "Console" tab when clicking an item.</p>
+
+<br/>
+<br/>
+<br/>
+
+<h2>Third party software</h2>
+<p>The following third-party libraries are used by this app. Thank you!</p>
+<ul>
+<li>jQuery - MIT - <a href="https://jquery.com/">https://jquery.com/</a></li>
+<li>Chart.js - MIT - <a href="https://www.chartjs.org/">https://www.chartjs.org/</a></li>
+<li>Font Awesome - Creative Commons Attribution-ShareAlike 4.0 License - <a href="https://fontawesome.com/">https://fontawesome.com/</a></li>
+<li>Tinycolor - MIT - <a href="https://github.com/bgrins/TinyColor">https://github.com/bgrins/TinyColor</a></li>
+</ul>
+
+
+</div>
+</html>
+    </panel>
+  </row>
+  <row depends="$showpage2$">
+    <panel>
+  <viz type="number_set_viz.number_set_viz">
+        <title>Basic example with default configuration</title>
+        <search>
+          <query>| gentimes start=-1 end=1 increment=15m $showpage2$ | rename starttime as _time | fields + _time | eval myValue=random()%500 | stats sparkline(avg(myValue)) as sparkline | eval text =  mvappend("Item1:42","Item2:22","Item3:10","Item4:171","Item5:55","Item6:226","Item7:171","Item8:55","Item9:226","Item10:10","Item11:171","Item12:55","Item13:226","Item14:171","Item15:55","Item16:226","Item17:10","Item18:171","Item19:55","Item20:226","Item21:","Item22:55","Item23:226","Item24:226","Item25:10","Item26:171","Item27:55","Item28:226","Item29:171","Item30:55","Item31:226","Item32:226","Item33:10","Item34:171","Item35:55","Item36:226","Item37:171","&lt;strong&gt;Item38&lt;/strong&gt;:55","Item39:226","Item40:33","Item41:10","Item42:71","Item43:55","Item44:226","Item45:171","Item46:55","Item47:226") | mvexpand text | rex field=text "(?&lt;title&gt;[^:]+):(?&lt;value&gt;.*)" | table title value sparkline</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <refresh>30s</refresh>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="number_set_viz.number_set_viz.absolute">no</option>
+        <option name="number_set_viz.number_set_viz.animation">yes</option>
+        <option name="number_set_viz.number_set_viz.coarse_positions">no</option>
+        <option name="number_set_viz.number_set_viz.color">#000000</option>
+        <option name="number_set_viz.number_set_viz.colormode">auto</option>
+        <option name="number_set_viz.number_set_viz.heightmax">300</option>
+        <option name="number_set_viz.number_set_viz.heightmin">50</option>
+        <option name="number_set_viz.number_set_viz.labels_as_html">yes</option>
+        <option name="number_set_viz.number_set_viz.margin">10</option>
+        <option name="number_set_viz.number_set_viz.max">100</option>
+        <option name="number_set_viz.number_set_viz.maxrows">200</option>
+        <option name="number_set_viz.number_set_viz.min">0</option>
+        <option name="number_set_viz.number_set_viz.nodatacolor">#0178c7</option>
+        <option name="number_set_viz.number_set_viz.pulserate">2</option>
+        <option name="number_set_viz.number_set_viz.radius">0</option>
+        <option name="number_set_viz.number_set_viz.ratio">200</option>
+        <option name="number_set_viz.number_set_viz.shadows">dark</option>
+        <option name="number_set_viz.number_set_viz.sparkHeight">30</option>
+        <option name="number_set_viz.number_set_viz.sparkWidth">100</option>
+        <option name="number_set_viz.number_set_viz.sparkalign">0</option>
+        <option name="number_set_viz.number_set_viz.sparkalignv">70</option>
+        <option name="number_set_viz.number_set_viz.sparkcolorfill">#009DD9</option>
+        <option name="number_set_viz.number_set_viz.sparkcolorline">#0178c7</option>
+        <option name="number_set_viz.number_set_viz.sparkcolormodefill">darker1</option>
+        <option name="number_set_viz.number_set_viz.sparkcolormodeline">darker2</option>
+        <option name="number_set_viz.number_set_viz.sparkmin">0</option>
+        <option name="number_set_viz.number_set_viz.sparknulls">gaps</option>
+        <option name="number_set_viz.number_set_viz.sparkorder">yes</option>
+        <option name="number_set_viz.number_set_viz.sparkstyle">area</option>
+        <option name="number_set_viz.number_set_viz.subtitlealign">center</option>
+        <option name="number_set_viz.number_set_viz.subtitlealignv">80</option>
+        <option name="number_set_viz.number_set_viz.subtitlecolor">#ffffff</option>
+        <option name="number_set_viz.number_set_viz.subtitlecolormode">static</option>
+        <option name="number_set_viz.number_set_viz.subtitledrop">no</option>
+        <option name="number_set_viz.number_set_viz.subtitledropcolor">#000000</option>
+        <option name="number_set_viz.number_set_viz.subtitlesize">50</option>
+        <option name="number_set_viz.number_set_viz.textalign">center</option>
+        <option name="number_set_viz.number_set_viz.textalignv">50</option>
+        <option name="number_set_viz.number_set_viz.textcolor">#ffffff</option>
+        <option name="number_set_viz.number_set_viz.textdrop">yes</option>
+        <option name="number_set_viz.number_set_viz.textdropcolor">#000000</option>
+        <option name="number_set_viz.number_set_viz.textduration">300</option>
+        <option name="number_set_viz.number_set_viz.textmode">static</option>
+        <option name="number_set_viz.number_set_viz.textprecision">1</option>
+        <option name="number_set_viz.number_set_viz.textsize">140</option>
+        <option name="number_set_viz.number_set_viz.textunitposition">after</option>
+        <option name="number_set_viz.number_set_viz.textunitsize">50</option>
+        <option name="number_set_viz.number_set_viz.thresholdcol1">#1a9035</option>
+        <option name="number_set_viz.number_set_viz.thresholdcol2">#d16f18</option>
+        <option name="number_set_viz.number_set_viz.thresholdcol3">#b22b32</option>
+        <option name="number_set_viz.number_set_viz.thresholdcol4">#ffffff</option>
+        <option name="number_set_viz.number_set_viz.thresholdcol5">#ffffff</option>
+        <option name="number_set_viz.number_set_viz.thresholdcol6">#ffffff</option>
+        <option name="number_set_viz.number_set_viz.thresholdval2">70</option>
+        <option name="number_set_viz.number_set_viz.thresholdval3">90</option>
+        <option name="number_set_viz.number_set_viz.titlealign">center</option>
+        <option name="number_set_viz.number_set_viz.titlealignv">18</option>
+        <option name="number_set_viz.number_set_viz.titlecolor">#ffffff</option>
+        <option name="number_set_viz.number_set_viz.titlecolormode">static</option>
+        <option name="number_set_viz.number_set_viz.titledrop">no</option>
+        <option name="number_set_viz.number_set_viz.titledropcolor">#000000</option>
+        <option name="number_set_viz.number_set_viz.titlesize">70</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="height">600</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <drilldown>
+          <set token="item">$row.title$</set>
+        </drilldown>
+      </viz>
+    </panel>
+  </row>
+  <row depends="$showpage3$">
+    <panel>
+      <viz type="number_set_viz.number_set_viz">
+        <title>Absolute layout mode with border radius 50%</title>
+        <search>
+          <query>| makeresults | eval text =  mvappend("Item1:50","Item2:50","Item3:50","Item4:50","Item5:75","Item6:75","Item7:75","Item8:75","Item9:100","Item10:100") | mvexpand text | rex field=text "(?&lt;title&gt;[^:]+):(?&lt;height&gt;.*)" | eval value = random()%100 | eval value = if(value &gt; 30,100,value) | eval id = title | table id value height </query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <refresh>30s</refresh>
+        </search>
+        <option name="drilldown">all</option>
+        <option name="height">634</option>
+        <option name="number_set_viz.number_set_viz.absolute">yes</option>
+        <option name="number_set_viz.number_set_viz.animation">yes</option>
+        <option name="number_set_viz.number_set_viz.background">/static/app/number_set_viz/aws_demo_diagram.png</option>
+        <option name="number_set_viz.number_set_viz.coarse_positions">no</option>
+        <option name="number_set_viz.number_set_viz.color">#000000</option>
+        <option name="number_set_viz.number_set_viz.colormode">auto</option>
+        <option name="number_set_viz.number_set_viz.heightmax">300</option>
+        <option name="number_set_viz.number_set_viz.heightmin">50</option>
+        <option name="number_set_viz.number_set_viz.labels_as_html">no</option>
+        <option name="number_set_viz.number_set_viz.margin">10</option>
+        <option name="number_set_viz.number_set_viz.max">100</option>
+        <option name="number_set_viz.number_set_viz.maxrows">200</option>
+        <option name="number_set_viz.number_set_viz.min">0</option>
+        <option name="number_set_viz.number_set_viz.nodatacolor">#0178c7</option>
+        <option name="number_set_viz.number_set_viz.positions">"Item10":"57.4,28.2","Item9":"71.6,39.6","Item8":"36.2,34.9","Item7":"47.6,48.1","Item6":"58.5,62.5","Item5":"29.5,72.4","Item4":"13.2,80.6","Item3":"26.1,48.4","Item2":"38.8,63.6","Item1":"49.9,76.4"</option>
+        <option name="number_set_viz.number_set_viz.pulserate">4</option>
+        <option name="number_set_viz.number_set_viz.radius">50</option>
+        <option name="number_set_viz.number_set_viz.ratio">100</option>
+        <option name="number_set_viz.number_set_viz.shadows">dark</option>
+        <option name="number_set_viz.number_set_viz.sizemax">100</option>
+        <option name="number_set_viz.number_set_viz.sizemin">50</option>
+        <option name="number_set_viz.number_set_viz.sparkHeight">30</option>
+        <option name="number_set_viz.number_set_viz.sparkWidth">100</option>
+        <option name="number_set_viz.number_set_viz.sparkalign">0</option>
+        <option name="number_set_viz.number_set_viz.sparkalignv">70</option>
+        <option name="number_set_viz.number_set_viz.sparkcolorfill">#009DD9</option>
+        <option name="number_set_viz.number_set_viz.sparkcolorline">#0178c7</option>
+        <option name="number_set_viz.number_set_viz.sparkcolormodefill">darker1</option>
+        <option name="number_set_viz.number_set_viz.sparkcolormodeline">darker2</option>
+        <option name="number_set_viz.number_set_viz.sparkmin">0</option>
+        <option name="number_set_viz.number_set_viz.sparknulls">gaps</option>
+        <option name="number_set_viz.number_set_viz.sparkorder">no</option>
+        <option name="number_set_viz.number_set_viz.sparkstyle">area</option>
+        <option name="number_set_viz.number_set_viz.subtitlealign">center</option>
+        <option name="number_set_viz.number_set_viz.subtitlealignv">80</option>
+        <option name="number_set_viz.number_set_viz.subtitlecolor">#ffffff</option>
+        <option name="number_set_viz.number_set_viz.subtitlecolormode">static</option>
+        <option name="number_set_viz.number_set_viz.subtitledrop">yes</option>
+        <option name="number_set_viz.number_set_viz.subtitledropcolor">#000000</option>
+        <option name="number_set_viz.number_set_viz.subtitlesize">50</option>
+        <option name="number_set_viz.number_set_viz.textalign">center</option>
+        <option name="number_set_viz.number_set_viz.textalignv">55</option>
+        <option name="number_set_viz.number_set_viz.textcolor">#000000</option>
+        <option name="number_set_viz.number_set_viz.textdrop">yes</option>
+        <option name="number_set_viz.number_set_viz.textdropcolor">#C6C6C6</option>
+        <option name="number_set_viz.number_set_viz.textduration">300</option>
+        <option name="number_set_viz.number_set_viz.textmode">darker3</option>
+        <option name="number_set_viz.number_set_viz.textprecision">1</option>
+        <option name="number_set_viz.number_set_viz.textsize">140</option>
+        <option name="number_set_viz.number_set_viz.textunitposition">afterabs</option>
+        <option name="number_set_viz.number_set_viz.textunitsize">75</option>
+        <option name="number_set_viz.number_set_viz.thresholdcol1">#b22b32</option>
+        <option name="number_set_viz.number_set_viz.thresholdcol2">#d16f18</option>
+        <option name="number_set_viz.number_set_viz.thresholdcol3">#1a9035</option>
+        <option name="number_set_viz.number_set_viz.thresholdcol4">#ffffff</option>
+        <option name="number_set_viz.number_set_viz.thresholdcol5">#d16f18</option>
+        <option name="number_set_viz.number_set_viz.thresholdcol6">#ffffff</option>
+        <option name="number_set_viz.number_set_viz.thresholdval2">20</option>
+        <option name="number_set_viz.number_set_viz.thresholdval3">90</option>
+        <option name="number_set_viz.number_set_viz.titlealign">center</option>
+        <option name="number_set_viz.number_set_viz.titlealignv">32</option>
+        <option name="number_set_viz.number_set_viz.titlecolor">#000000</option>
+        <option name="number_set_viz.number_set_viz.titlecolormode">darker3</option>
+        <option name="number_set_viz.number_set_viz.titledrop">yes</option>
+        <option name="number_set_viz.number_set_viz.titledropcolor">#C6C6C6</option>
+        <option name="number_set_viz.number_set_viz.titlefont">number_display_viz-thin</option>
+        <option name="number_set_viz.number_set_viz.titlesize">80</option>
+        <option name="number_set_viz.number_set_viz.titletext">Health</option>
+        <option name="number_set_viz.number_set_viz.width">1300</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+        <drilldown>
+          <set token="item">$row.title$</set>
+        </drilldown>
+      </viz>
+    </panel>
+  </row>
+  <row depends="$showpage4$">
+    <panel>
+      <viz type="number_set_viz.number_set_viz">
+        <title>Absolute layout mode with 300% width</title>
+        <search>
+          <query>| gentimes start=-1 end=1 increment=15m $showpage4$ | rename starttime as _time | fields + _time | eval myValue=random()%100 | stats sparkline(avg(myValue)) as sparkline | eval title =  mvappend("Brisbane","Sydney","Melbourne","Darwin","Adelaide","Hobart","Perth") | mvexpand title | eval value = ((random() % 100) + 1) | table sparkline title value | eval id = title</query> 
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <refresh>30s</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="height">906</option>
+        <option name="number_set_viz.number_set_viz.absolute">yes</option>
+        <option name="number_set_viz.number_set_viz.animation">yes</option>
+        <option name="number_set_viz.number_set_viz.background">/static/app/number_set_viz/map.png</option>
+        <option name="number_set_viz.number_set_viz.coarse_positions">no</option>
+        <option name="number_set_viz.number_set_viz.color">#000000</option>
+        <option name="number_set_viz.number_set_viz.colormode">auto</option>
+        <option name="number_set_viz.number_set_viz.heightmax">300</option>
+        <option name="number_set_viz.number_set_viz.heightmin">50</option>
+        <option name="number_set_viz.number_set_viz.labels_as_html">no</option>
+        <option name="number_set_viz.number_set_viz.margin">10</option>
+        <option name="number_set_viz.number_set_viz.max">100</option>
+        <option name="number_set_viz.number_set_viz.maxrows">200</option>
+        <option name="number_set_viz.number_set_viz.min">0</option>
+        <option name="number_set_viz.number_set_viz.nodatacolor">#0178c7</option>
+        <option name="number_set_viz.number_set_viz.positions">"Brisbane":"70.5,45.9","Sydney":"70.5,61.4","Melbourne":"61.1,75.9","Darwin":"43.4,19.6","Adelaide":"47.2,64.8","Hobart":"62.8,87.2","Perth":"19.1,60.3"</option>
+        <option name="number_set_viz.number_set_viz.pulserate">4</option>
+        <option name="number_set_viz.number_set_viz.radius">0</option>
+        <option name="number_set_viz.number_set_viz.ratio">300</option>
+        <option name="number_set_viz.number_set_viz.shadows">dark</option>
+        <option name="number_set_viz.number_set_viz.sizemax">100</option>
+        <option name="number_set_viz.number_set_viz.sizemin">50</option>
+        <option name="number_set_viz.number_set_viz.sparkHeight">50</option>
+        <option name="number_set_viz.number_set_viz.sparkWidth">100</option>
+        <option name="number_set_viz.number_set_viz.sparkalign">0</option>
+        <option name="number_set_viz.number_set_viz.sparkalignv">50</option>
+        <option name="number_set_viz.number_set_viz.sparkcolorfill">#009DD9</option>
+        <option name="number_set_viz.number_set_viz.sparkcolorline">#0178c7</option>
+        <option name="number_set_viz.number_set_viz.sparkcolormodefill">darker1</option>
+        <option name="number_set_viz.number_set_viz.sparkcolormodeline">darker2</option>
+        <option name="number_set_viz.number_set_viz.sparkmin">0</option>
+        <option name="number_set_viz.number_set_viz.sparknulls">gaps</option>
+        <option name="number_set_viz.number_set_viz.sparkorder">yes</option>
+        <option name="number_set_viz.number_set_viz.sparkstyle">area</option>
+        <option name="number_set_viz.number_set_viz.subtitlealign">hide</option>
+        <option name="number_set_viz.number_set_viz.subtitlealignv">80</option>
+        <option name="number_set_viz.number_set_viz.subtitlecolor">#ffffff</option>
+        <option name="number_set_viz.number_set_viz.subtitlecolormode">static</option>
+        <option name="number_set_viz.number_set_viz.subtitledrop">yes</option>
+        <option name="number_set_viz.number_set_viz.subtitledropcolor">#000000</option>
+        <option name="number_set_viz.number_set_viz.subtitlesize">50</option>
+        <option name="number_set_viz.number_set_viz.textalign">right</option>
+        <option name="number_set_viz.number_set_viz.textalignv">30</option>
+        <option name="number_set_viz.number_set_viz.textcolor">#ffffff</option>
+        <option name="number_set_viz.number_set_viz.textdrop">yes</option>
+        <option name="number_set_viz.number_set_viz.textdropcolor">#000000</option>
+        <option name="number_set_viz.number_set_viz.textduration">300</option>
+        <option name="number_set_viz.number_set_viz.textmode">static</option>
+        <option name="number_set_viz.number_set_viz.textprecision">1</option>
+        <option name="number_set_viz.number_set_viz.textsize">140</option>
+        <option name="number_set_viz.number_set_viz.textunitposition">after</option>
+        <option name="number_set_viz.number_set_viz.textunitsize">50</option>
+        <option name="number_set_viz.number_set_viz.thresholdcol1">#1a9035</option>
+        <option name="number_set_viz.number_set_viz.thresholdcol2">#d16f18</option>
+        <option name="number_set_viz.number_set_viz.thresholdcol3">#b22b32</option>
+        <option name="number_set_viz.number_set_viz.thresholdcol4">#ffffff</option>
+        <option name="number_set_viz.number_set_viz.thresholdcol5">#d16f18</option>
+        <option name="number_set_viz.number_set_viz.thresholdcol6">#ffffff</option>
+        <option name="number_set_viz.number_set_viz.thresholdval2">70</option>
+        <option name="number_set_viz.number_set_viz.thresholdval3">90</option>
+        <option name="number_set_viz.number_set_viz.titlealign">left</option>
+        <option name="number_set_viz.number_set_viz.titlealignv">30</option>
+        <option name="number_set_viz.number_set_viz.titlecolor">#ffffff</option>
+        <option name="number_set_viz.number_set_viz.titlecolormode">static</option>
+        <option name="number_set_viz.number_set_viz.titledrop">yes</option>
+        <option name="number_set_viz.number_set_viz.titledropcolor">#000000</option>
+        <option name="number_set_viz.number_set_viz.titlesize">140</option>
+        <option name="number_set_viz.number_set_viz.width">1300</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </viz>
+    </panel>
+  </row>
+</form>

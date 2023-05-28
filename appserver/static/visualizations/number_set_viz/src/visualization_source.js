@@ -1,0 +1,1122 @@
+define([
+    'jquery',
+    'api/SplunkVisualizationBase',
+    'api/SplunkVisualizationUtils',
+    'chart.js',
+    'tinycolor2'
+],
+function(
+    $,
+    SplunkVisualizationBase,
+    vizUtils,
+    Chart,
+    tinycolor
+) {
+    var vizObj = {
+        initialize: function() {
+            SplunkVisualizationBase.prototype.initialize.apply(this, arguments);
+            var viz = this;
+            viz.instance_id = Math.round(Math.random() * 1000000);
+            var theme = 'light'; 
+            if (typeof vizUtils.getCurrentTheme === "function") {
+                theme = vizUtils.getCurrentTheme();
+            }
+            viz.colors = ["#006d9c", "#4fa484", "#ec9960", "#af575a", "#b6c75a", "#62b3b2"];
+            if (typeof vizUtils.getColorPalette === "function") {
+                viz.colors = vizUtils.getColorPalette("splunkCategorical", theme);
+            }
+            viz.$container_wrap = $(viz.el);
+            viz.$container_wrap.addClass("number_set_viz-container");
+
+
+            // From https://stackoverflow.com/a/5207328
+            $.easing.easeOutExpo = function (x, t, b, c, d) {
+                return (t==d) ? b+c : c * (-Math.pow(2, -10 * t/d) + 1) + b;
+            };
+        },
+
+
+        formatData: function(data) {
+            return data;
+        },
+
+
+        updateView: function(data, config) {
+            var viz = this;
+            viz.config = {
+                heightmin: "50",
+                heightmax: "300",
+                ratio: "200",
+                margin: "10",
+                maxrows: "200",
+                nodatacolor: "#0178c7",
+                thresholdcol1: "#1a9035",
+                thresholdcol2: "#d16f18",
+                thresholdcol3: "#b22b32",
+                thresholdcol4: "#ffffff",
+                thresholdcol5: "#ffffff",
+                thresholdcol6: "#ffffff",
+                thresholdval2: "70",
+                thresholdval3: "90",
+                thresholdval4: "",
+                thresholdval5: "",
+                thresholdval6: "",
+                colormode: "auto",
+                color: "#000000",
+
+                sparkorder: "yes",
+                sparkstyle: "area",
+                sparknulls: "gaps",
+                sparkcolormodeline: "darker2",
+                sparkcolorline: "#0178c7",
+                sparkcolormodefill: "darker1",
+                sparkcolorfill: "#009DD9",
+                sparkmin: "0",
+                sparkmax: "",
+                sparkalign: "0",
+                sparkalignv: "70",
+                sparkHeight: "30",
+                sparkWidth: "100",
+
+                textmode: "static",
+                textcolor: "#ffffff",
+                textalign: "center",
+                textalignv: "50",
+                textsize: "140",
+                textprecision: "1",
+                textprocessing: "",
+                textunit: "",
+                textunitsize: "50",
+                textunitposition: "after",
+                textfont: "",
+                textdrop: "yes",
+                textdropcolor: "#000000",
+
+                titletext: "",
+                titlealign: "center",
+                titlealignv: "18",
+                titlesize: "70",
+                titlecolormode: "static",
+                titlecolor: "#ffffff",
+                titlefont: "",
+                titledrop: "no",
+                titledropcolor: "#000000",
+
+                subtitletext: "",
+                subtitlealign: "center",
+                subtitlealignv: "80",
+                subtitlesize: "50",
+                subtitlecolormode: "static",
+                subtitlecolor: "#ffffff",
+                subtitlefont: "",
+                subtitledrop: "no",
+                subtitledropcolor: "#000000",
+
+                absolute: "no",
+                positions: "",
+                background: "",
+                width: "",
+                coarse_positions: "no",
+                labels_as_html: "no",
+                shadows: "no",
+                radius: "0",
+                animation: "yes",
+            };
+
+            // Override defaults with selected items from the UI
+            for (var opt in config) {
+                if (config.hasOwnProperty(opt)) {
+                    viz.config[ opt.replace(viz.getPropertyNamespaceInfo().propertyNamespace,'') ] = config[opt];
+                }
+            }
+
+            var numberFields = ["heightmin", "heightmax", "ratio", "margin", "maxrows", "thresholdval2", "thresholdval3", "thresholdval4", "thresholdval5", "thresholdval6", "sparkmin", "sparkmax", "sparkalign", "sparkalignv", "sparkHeight", "sparkWidth", "textalignv", "textsize", "titlealignv", "titlesize", "subtitlealignv", "subtitlesize", "width", "radius"];
+
+            // Convert these fields from strings to numbers
+            for (var i=0; i < numberFields.length; i++) {
+                if (viz.config[numberFields[i]] !== "") {
+                    viz.config[numberFields[i]] = Number(viz.config[numberFields[i]]);
+                }
+            }
+
+            viz.data = data;
+            viz.scheduleDraw();
+
+            $(window).off("resize.number_set_viz").on("resize.number_set_viz", function () {
+                viz.scheduleDraw();
+            });
+        },
+
+        // debounce the draw
+        scheduleDraw: function(){
+            var viz = this;
+            clearTimeout(viz.drawtimeout);
+            viz.drawtimeout = setTimeout(function(){
+                viz.doDraw();
+            }, 300);
+        },
+
+        doDraw: function(){
+            var viz = this;
+            // Dont draw unless this is a real element under body
+            if (! viz.$container_wrap.parents().is("body")) {
+                return;
+            }
+
+            // reset and custom CSS on container item
+            viz.$container_wrap.attr("style", "height:100%;");
+
+            // Keep track of the container size the config used so we know if we need to redraw teh whole page
+            viz.config.containerHeight = viz.$container_wrap.height();
+            viz.config.containerWidth = viz.$container_wrap.width();
+            // Manually defined width
+            var widthDefined = Number(viz.config.width);
+            if (widthDefined > 0) {
+                viz.config.containerWidth = widthDefined;
+                viz.$container_wrap.css({"width": widthDefined + "px"}); //, "border-left":"1px dashed rgba(0, 0, 0, 0.2)", "border-right":"1px dashed rgba(0, 0, 0, 0.2)"});
+            }
+
+            // Check to see if there is a field specifically called "title" in which case it will override
+            var foundField = false;
+            var hasId = false;
+            for (var m = 0; m < viz.data.fields.length; m++) {
+                if (viz.data.fields[m].name === "title" || viz.data.fields[m].name === "value" || viz.data.fields[m].name === "text" ) {
+                    foundField = true;
+                }
+                if (viz.data.fields[m].name === "id") {
+                    hasId = true;
+                }
+            }
+
+            // Can't continue becuase of data issues
+            if (! foundField) {
+                viz.$container_wrap.empty();
+                viz.$container_wrap.append('<div style="text-align: center; width:100%; color: #818d99; line-height: 3;">Unexpected data format.<br />Provide data with expected field names, for example: "value", "title", "text"  (see Format menu &lt; Help for supported field names) </div>');
+                return;
+            }
+
+            // Can't continue becuase of data issues
+            if (! hasId && viz.config.absolute === "yes") {
+                viz.$container_wrap.empty();
+                viz.$container_wrap.append('<div style="text-align: center; width:100%; color: #818d99; line-height: 3;">Unexpected data format.<br />For Absolute layout mode you must provide data with a field in the data called "id" </div>');
+                return;
+            }
+
+            var item, i;
+
+            var allowedOverrides = {
+                color: "color",
+                height: "height",
+                width: "width",
+                bgcolor: "bgcolor",
+                value: "value",
+                sparkline: "overtimedata",
+                title: "title",
+                text: "text",
+                id: "id",
+                subtitle: "subtitle",
+                thresholdcolor1: "thresholdcol1",
+                thresholdcolor2: "thresholdcol2",
+                thresholdcolor3: "thresholdcol3",
+                thresholdcolor4: "thresholdcol4",
+                thresholdcolor5: "thresholdcol5",
+                thresholdcolor6: "thresholdcol6",
+                thresholdvalue1: "thresholdval1",
+                thresholdvalue2: "thresholdval2",
+                thresholdvalue3: "thresholdval3",
+                thresholdvalue4: "thresholdval4",
+                thresholdvalue5: "thresholdval5",
+                thresholdvalue6: "thresholdval6",
+                info_min_time: "info_min_time",
+                info_max_time: "info_max_time",
+            };
+
+            viz.item = [];
+            for (i = 0; i < viz.data.rows.length; i++) {
+                item = {
+                    id: i,
+                    overtimedata: [],
+                    title: "",
+                    value: null,
+                };
+
+                viz.item.push(item);
+
+                // overrides are columns in the data with specific names
+                for (var k = 0; k < viz.data.fields.length; k++) {
+                    if (allowedOverrides.hasOwnProperty(viz.data.fields[k].name)) {
+                        if (viz.data.fields[k].name === "sparkline") {
+                            item[allowedOverrides[viz.data.fields[k].name]] = viz.getSparkline(viz.data.rows[i][k]);
+                        } else {
+                            item[allowedOverrides[viz.data.fields[k].name]] = viz.data.rows[i][k];
+                        }
+                    }
+                }
+                if (item.value === null) {
+                    if (item.overtimedata.length) {
+                        item.value = item.overtimedata[item.overtimedata.length - 1];
+                    } else {
+                        item.value = "";
+                    }
+                }
+            }
+
+            viz.config.aspectRatio = Number(viz.config.ratio) / 100;
+
+            // Can't continue becuase too many rows
+            if (viz.item.length > Number(viz.config.maxrows)) {
+                viz.$container_wrap.empty();
+                viz.$container_wrap.append('<div style="text-align: center; width:100%; color: #818d99; line-height: 3;">Too many rows of data (Total rows:' + viz.item.length + ', Limit: ' + viz.config.maxrows + ') Increase the max items in the Format menu &lt; Advanced</div>');
+                return;
+            }
+
+            // set the background image if set
+            if (viz.config.background !== "") {
+                viz.$container_wrap.css("background", "top center no-repeat url(" + viz.config.background + ")");
+            }
+
+            // For any items still in teh container, animate them off the screen and remove them
+            viz.$container_wrap.children().each(function(){
+                var $this = $(this);
+                var d = $this.data("number_set_viz-time");
+                if (typeof d !== "undefined") {
+                    setTimeout(function(){
+                        $this[0].addEventListener('transitionend', function(){ 
+                            $(this).remove();
+                        }, false);
+                        $this.removeClass("number_set_viz-animatein").addClass("number_set_viz-animateout");
+                    }, d);
+                } else {
+                    $this.remove();
+                }
+            });
+
+            var best = { area: 0, cols: 0, rows: 0, width: 0, height: 0 };
+
+            if (viz.config.absolute === "yes") { 
+                viz.positions = {};
+                if (viz.config.positions !== "") {
+                    try {
+                        viz.positions = JSON.parse("{" + viz.config.positions + "}");
+                    } catch (e) {
+                        console.log("Unable to load initial positioning as it isnt a valid JSON array");
+                    }
+                }
+                if (viz.config.coarse_positions === "yes") {
+                    viz.positionMultiplier = 100;
+                } else {
+                    viz.positionMultiplier = 1000;
+                }
+                // Add a button that allows copying the current positions to the clipboard
+                viz.positionsButton = $("<span class='number_set_viz-copylink btn-pill'><i class='far fa-clipboard'></i> Copy positions to clipboard</span>")
+                    .appendTo(viz.$container_wrap)
+                    .on("click", function(e){
+                        var dump = JSON.stringify(viz.positions);
+                        console.log(dump.substr(1,dump.length-2));
+                        viz.copyTextToClipboard(dump.substr(1,dump.length-2));
+                        e.stopPropagation();
+                    }).on("mouseover",function(){
+                        viz.positionsButton.css({"opacity": "1"});
+                    }).on("mouseout", function(){
+                        clearTimeout(viz.positionsButtonTimeout);
+                        viz.positionsButtonTimeout = setTimeout(function(){
+                            viz.positionsButton.css("opacity",0);
+                        }, 5000);
+                    });
+
+                viz.config.itemHeight = viz.config.heightmin;
+                viz.config.itemWidth = viz.config.itemHeight * viz.config.aspectRatio;
+            } else {
+                for (var cols = viz.item.length; cols > 0; cols--) {
+                    var rows = Math.ceil(viz.item.length / cols);
+                    var hScale = (viz.config.containerWidth - 20) / (cols * viz.config.aspectRatio);
+                    var vScale = (viz.config.containerHeight - 20) / rows;
+                    var width;
+                    var height;
+
+                    // Determine which axis is the constraint.
+                    if (hScale <= vScale) {
+                        width = (viz.config.containerWidth - 20) / cols;
+                        height = width / viz.config.aspectRatio;
+                    } else {
+                        height = (viz.config.containerHeight - 20) / rows;
+                        width = height * viz.config.aspectRatio;
+                    }
+                    var area = width * height;
+                    if (area > best.area) {
+                        best = {"area":area, "width":width, "height":height, "rows":rows, "cols":cols};
+                    }
+                }
+                best.height = Math.min(viz.config.heightmax, best.height);
+                // Check to make sure we dont breech the minimum item size when trying to fit in the available space. otherwise we need to use a scroll bar
+                if (viz.config.heightmin > best.height) {
+                    best.height = viz.config.heightmin;
+                    best.width = best.height * viz.config.aspectRatio;
+                    best.rows = Math.ceil(viz.item.length / (Math.floor((viz.config.containerWidth - 20) / best.width)));
+                    viz.$container_wrap.css("overflow-y","scroll");
+                }
+
+// TODO if these dont fit, we need to cut them off rather than let them flow off the screen
+                best.width = best.height * viz.config.aspectRatio;
+                // Figure out how many items per row would fit is we better distribute items by row
+                viz.config.itemsPerRow = Math.ceil(viz.item.length / best.rows);
+                viz.config.itemHeight = Math.floor(best.height - viz.config.margin);
+                viz.config.itemWidth = Math.floor(best.width - viz.config.margin);
+                viz.config.containerLeftMargin = ((viz.config.containerWidth - (viz.config.itemsPerRow * (viz.config.itemWidth + (viz.config.margin/2)) - (viz.config.margin/2))) / 2);
+            }
+
+
+            for (i = 0; i < viz.item.length; i++) {
+                // Two final data validation checks
+                if (viz.item[i].value === null) { 
+                    viz.item[i].value = "";
+                }
+                if (! Array.isArray(viz.item[i].overtimedata)) {
+                    viz.item[i].overtimedata = [];
+                }
+                // Only draw if container has size. Otherwise its hidden
+                if (viz.config.containerWidth > 0) {
+                    viz.doDrawItem(i);
+                }
+            }
+        
+            if (viz.config.animation === "yes" ) {
+                if (viz.config.absolute === "yes") { 
+                    // sort items from top left to bottom right for a nice animation effect
+                    viz.item.sort(function(a,b){
+                        return (a.item_left + a.item_top) - (b.item_left + b.item_top);
+                    });
+                    
+                    setTimeout(function(){
+                        var start = performance.now();
+                        $({ i:0, track:0 }).animate({ i:viz.item.length }, {
+                            duration: 1000,
+                            easing: 'easeOutExpo',
+                            step: function (num) {
+                                var now = Math.round(this.i);
+                                for (; this.track < now; this.track++) {
+                                    // the viz.item can change while we are animating
+                                    if (viz.item.length > this.track && viz.item[this.track].hasOwnProperty("$container")) {
+                                        viz.item[this.track].$container.data("number_set_viz-time", (performance.now() - start)).addClass("number_set_viz-animatein");
+                                    }
+                                }
+                            }
+                        });
+                        if ($(".dashboard-body>.dashboard.view-mode").length > 0) {
+                            $({ i:0, track:0 }).animate({ i:viz.item.length }, {
+                                duration: 5000,
+                                easing: 'easeOutExpo',
+                                step: function () {
+                                    var now = Math.ceil(this.i);
+                                    for (; this.track < now; this.track++) {
+                                        // the viz.item can change while we are animating
+                                        if (viz.item.length > this.track && viz.item[this.track].hasOwnProperty("$container")) {
+                                            // dont animate objects still sitting at teh top left becuase it looks dumb 
+                                            if (viz.item[this.track].$container.css("top") !== "50px" || viz.item[this.track].$container.css("left") !== "50px") {
+                                                viz.item[this.track].$container.addClass("number_set_viz-pulsego");
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    // need to wait 500 ms becuase sometimes there is a double draw on page load that looks stupid
+                    },500);
+                } else {
+
+                    setTimeout(function(){
+                        var start = performance.now();
+                        $({ i:0, track:0 }).animate({ i:viz.config.itemsPerRow }, {
+                            duration: 1000,
+                            easing: 'easeOutExpo',
+                            step: function () {
+                                var now = Math.round(this.i);
+                                for (; this.track < now; this.track++) {
+                                    for (var itemidx=this.track;itemidx < viz.item.length; itemidx+=viz.config.itemsPerRow) {
+                                        viz.item[itemidx].$container.data("number_set_viz-time", (performance.now() - start)).addClass("number_set_viz-animatein");
+                                    }
+                                }
+                            }
+                        });
+
+                    // need to wait 500 ms becuase sometimes there is a double draw on page load that looks stupid
+                    },500);
+                }
+            }
+        },
+        
+        getSparkline: function(obj){
+            if (Array.isArray(obj)) {
+                if (obj[0] === "##__SPARKLINE__##") {
+                    return obj.slice(1);
+                } else {
+                    return obj;
+                }
+            }
+            return [];
+        },
+
+        sanitise: function(val) {
+            return val.toString().replace(/\W+/g, "_");
+        },
+
+        doDrawItem: function(itemId){
+            var viz = this;
+            viz.distance_dragged = 0;
+
+            var item = viz.item[itemId];
+
+            for (var i = 1; i <= 6; i++) {
+                if (! item.hasOwnProperty("thresholdcol" + i)) {
+                    item["thresholdcol" + i] = viz.config["thresholdcol" + i];
+                }
+                if (! item.hasOwnProperty("thresholdval" + i)) {
+                    item["thresholdval" + i] = viz.config["thresholdval" + i];
+                } else {
+                    item["thresholdval" + i] = Number(item["thresholdval" + i]);
+                }
+            }
+
+            item.$canvas1 = $('<canvas class="number_set_viz-canvas_areachart"></canvas>');
+            item.$overlayText = $('<div class="number_set_viz-overlay_text"></div>');
+            item.$overlayTitle = $('<div class="number_set_viz-overlay_title"></div>');
+            item.$overlaySubTitle = $('<div class="number_set_viz-overlay_subtitle"></div>');
+            item.$wrapc1 = $('<div class="number_set_viz-wrap_areachart"></div>').append(item.$canvas1);
+            item.$pulse = $('<div class="number_set_viz-pulse"></div>');
+            item.$container = $('<div class="number_set_viz-wrap_item"></div>');
+            item.$container.append(item.$pulse, item.$wrapc1);
+            viz.$container_wrap.append(item.$container);
+
+            if (viz.config.radius > 0) {
+                item.$container.add(item.$pulse).css("border-radius", viz.config.radius + "%");
+            }
+            if (viz.config.shadows === "dark") {
+                item.$container.css("box-shadow", "0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23)");
+            } else if (viz.config.shadows === "light") {
+                item.$container.css("box-shadow", "0 10px 20px rgba(255,255,255,0.19), 0 6px 6px rgba(255,255,255,0.23)");
+            }
+
+            if (viz.config.animation !== "yes" ) {
+                item.$container.addClass("number_set_viz-animatein");
+            }
+            // Drilldown only available if there is a title field
+            item.$container.css("cursor","pointer").on("click", function(browserEvent){
+                // if the person was dragging we dont want to accidentally drilldown
+                if (viz.distance_dragged > 0) {
+                    return;
+                }
+                var defaultTokenModel = splunkjs.mvc.Components.get('default');
+                var submittedTokenModel = splunkjs.mvc.Components.get('submitted');
+                var data = {
+                    "click.name": item.title ? item.title : "",
+                    "click.value": item.value ? item.value : ""
+                };
+                console.log("Setting token $click.name$ to \"" + data["click.name"] + "\"");
+                console.log("Setting token $click.value$ to \"" + data["click.value"] + "\"");
+                for (var k = 0; k < viz.data.fields.length; k++) {
+                    if (viz.data.fields[k].name !== "sparkline" && viz.data.fields[k].name !== "height" && viz.data.fields[k].name !== "width" && viz.data.fields[k].name !== "color" && viz.data.fields[k].name !== "bgcolor" && viz.data.fields[k].name.substr(0,9) !== "threshold") {
+                        var token_name = "row." + viz.sanitise(viz.data.fields[k].name);
+                        data[token_name] = viz.data.rows[itemId][k];
+                        console.log("Setting token $" +  token_name + "$ to \"" + viz.data.rows[itemId][k] + "\"");
+                        if (defaultTokenModel) {
+                            defaultTokenModel.set(token_name, viz.data.rows[itemId][k]);
+                        } 
+                        if (submittedTokenModel) {
+                            submittedTokenModel.set(token_name, viz.data.rows[itemId][k]);
+                        }
+                    }
+                }
+                viz.drilldown({
+                    action: SplunkVisualizationBase.FIELD_VALUE_DRILLDOWN,
+                    data: data
+                }, browserEvent);
+            });
+
+            if (viz.config.absolute === "yes") { 
+                
+                item.$container.addClass("number_set_viz-absolute").css("z-index", itemId);
+
+                item.$container.on("mousedown", function(event) {
+                    // Dont allow dragging in view mode
+                    if ($(".dashboard-body>.dashboard.view-mode").length > 0) { return; }
+
+                    var container = viz.$container_wrap[0].getBoundingClientRect();
+                    var shiftX = event.clientX - item.$container[0].getBoundingClientRect().left + container.left;
+                    var shiftY = event.clientY - item.$container[0].getBoundingClientRect().top + container.top + $(window).scrollTop();
+
+                    viz.distance_dragged = 0;
+                    moveAt(event.pageX, event.pageY);
+
+                    // taking initial shifts into account
+                    function moveAt(pageX, pageY) {
+                        var newX = (pageX - shiftX);
+                        var newY =(pageY - shiftY);
+                        var newXAdj = (Math.round(newX / viz.config.containerWidth * viz.positionMultiplier) / (viz.positionMultiplier / 100));
+                        var newYAdj = (Math.round(newY / viz.config.containerHeight * viz.positionMultiplier) / (viz.positionMultiplier / 100));
+
+                        viz.positions[item.id] = "" + newXAdj + "," + newYAdj;
+                        // honor the corse positions
+                        item.item_left = Math.min((viz.config.containerWidth - 10), Math.max(0, (parseFloat(newXAdj) / 100 * viz.config.containerWidth)));
+                        item.item_top = Math.min((viz.config.containerHeight - 10), Math.max(0, (parseFloat(newYAdj) / 100 * viz.config.containerHeight)));
+
+                        item.$container.css({
+                            "top": item.item_top + "px",
+                            "left": item.item_left + "px"
+                        });
+                        viz.positionsButton.css("opacity",1);
+                        clearTimeout(viz.positionsButtonTimeout);
+                        viz.positionsButtonTimeout = setTimeout(function(){
+                            viz.positionsButton.css("opacity",0);
+                        }, 10000);
+                    }
+
+                    function onMouseMove(event) {
+                        moveAt(event.pageX, event.pageY);
+                        viz.distance_dragged++;
+                    }
+
+                    $(document).on('mousemove.number_set_viz', onMouseMove);
+
+                    // drop the item, remove unneeded handlers
+                    $(document).on("mouseup.number_set_viz", function() {
+                        $(document).off('mousemove.number_set_viz').off("mouseup.number_set_viz");
+                    });
+                });
+
+                // If item.height is not set in the data, then set the height and width to the format menu size
+                if (! item.height && ! item.width) {
+                    item.height = viz.config.itemHeight;
+                    item.width = viz.config.itemWidth;
+                } else if (! item.height) {
+                    // item width is not set in code, then calculate it based on the configured aspectratio
+                    item.height = item.width / viz.config.aspectRatio;
+                } else if (! item.width) {
+                    // item width is not set in code, then calculate it based on the configured aspectratio
+                    item.width = item.height * viz.config.aspectRatio;
+                }
+
+                item.item_top = "50";
+                item.item_left = "50";
+                if (viz.positions.hasOwnProperty(item.id)) {
+                    var dataxy = viz.positions[item.id].split(",");
+                    item.item_top = parseFloat(dataxy[1]) / 100 * viz.config.containerHeight;
+                    item.item_left = parseFloat(dataxy[0]) / 100 * viz.config.containerWidth;
+                }
+
+            } else {
+                item.height = viz.config.itemHeight;
+                item.width = viz.config.itemWidth;
+                item.item_top = 10 + (Math.floor(itemId / viz.config.itemsPerRow) * (item.height + (viz.config.margin/2)));
+                item.item_left = viz.config.containerLeftMargin + ((itemId % viz.config.itemsPerRow) * (item.width + (viz.config.margin/2)));
+            }
+
+            item.$container.css({
+                "top": item.item_top + "px",
+                "left": item.item_left + "px",
+                "height": item.height + "px", 
+                "width": item.width + "px"
+            });
+
+            if (viz.config.subtitlealign !== "hide") {
+                item.$container.append(item.$overlaySubTitle);
+            }
+            if (viz.config.titlealign !== "hide") {
+                item.$container.append(item.$overlayTitle);
+            }
+            if (viz.config.textalign !== "hide") {
+                item.$container.append(item.$overlayText);
+            }
+
+            // Sparkline
+            item.heightSpark = item.height * (viz.config.sparkHeight / 100);
+            item.widthSpark = item.width * (viz.config.sparkWidth / 100) ;
+            item.$canvas1[0].height = item.heightSpark;
+            item.$canvas1[0].width = item.widthSpark;
+            item.$wrapc1.css({
+                "top": (item.height * (viz.config.sparkalignv / 100)) + "px",
+                "left": (item.width * (viz.config.sparkalign / 100)) + "px",
+                "height": item.heightSpark + "px",
+                "width": item.widthSpark + "px",
+            });
+
+            // Text Value overlay
+            var textfontsize = (item.height * 0.2 * (viz.config.textsize / 100));
+            item.$overlayText.css({
+                "font-size": textfontsize + "px", 
+                "line-height": (textfontsize * 1.1) + "px", 
+                "margin-top": (item.height * (viz.config.textalignv / 100) - (textfontsize * 0.5)) + "px", 
+                "height" : (textfontsize * 2) + "px",
+                "width": (item.width * 0.9) + "px",
+                "margin-left": ((item.width * 0.9) / 2 * -1) + "px", 
+                "left": "50%",
+                "text-align": viz.config.textalign,
+            }).addClass(viz.config.textfont);
+
+            if (viz.config.textdrop === "yes") {
+                item.$overlayText.css({"text-shadow": "1px 1px 1px " + viz.config.textdropcolor});
+            }
+
+            if (viz.config.textmode === "static") {
+                item.$overlayText.css({"color": viz.config.textcolor});
+            }
+            // Title overlay
+            var titlefontsize = (item.height * 0.2 * (viz.config.titlesize / 100));
+            item.$overlayTitle.css({
+                "font-size": titlefontsize + "px", 
+                "margin-top": (item.height * (viz.config.titlealignv / 100) - (titlefontsize * 0.5)) + "px", 
+                "width": (item.width * 0.9) + "px",
+                "margin-left": ((item.width * 0.9) / 2 * -1) + "px", 
+                "left": "50%",
+                "text-align": viz.config.titlealign,
+            }).addClass(viz.config.titlefont);
+
+            if (viz.config.titledrop === "yes") {
+                item.$overlayTitle.css({"text-shadow": "1px 1px 1px " + viz.config.titledropcolor});
+            }
+            if (viz.config.titlecolormode === "static") {
+                item.$overlayTitle.css({"color": viz.config.titlecolor});
+            }
+
+            // SubTitle overlay
+            var subtitlefontsize = (item.height * 0.2 * (viz.config.subtitlesize / 100));
+            item.$overlaySubTitle.css({
+                "font-size": subtitlefontsize + "px", 
+                "margin-top": (item.height * (viz.config.subtitlealignv / 100) - (subtitlefontsize * 0.5)) + "px", 
+                "width": (item.width * 0.9) + "px",
+                "margin-left": ((item.width * 0.9) / 2 * -1) + "px", 
+                "left": "50%",
+                "text-align": viz.config.subtitlealign,
+            }).addClass(viz.config.subtitlefont);
+
+            if (viz.config.subtitledrop === "yes") {
+                item.$overlaySubTitle.css({"text-shadow": "1px 1px 1px " + viz.config.subtitledropcolor});
+            }
+            if (viz.config.subtitlecolormode === "static") {
+                item.$overlaySubTitle.css({"color": viz.config.subtitlecolor});
+            }
+
+            if (viz.config.sparkorder !== "no") {
+                item.ctx1 = item.$canvas1[0].getContext('2d');
+                item.areaCfg = {
+                    type: viz.config.sparkstyle == "column" || viz.config.sparkstyle == "status" ? "bar" : "line",
+                    data: {
+                        datasets: [],
+                        labels: []
+                    },
+                    options: {
+                        responsive: true,
+                        title: {
+                            display: false,
+                        },
+                        legend: {
+                            display: false,
+                        },
+                        tooltips: {
+                            enabled: false,
+                            custom: function(c){ viz.tooltip(c, this); },
+                            mode: 'index',
+                            intersect: false
+                        },
+                        hover: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        animation: {
+                            duration: 0,
+                        },
+                        elements: {
+                            line: {
+                                tension: 0 // disables bezier curves
+                            }
+                        },
+                        scales: {
+                            xAxes: [{
+                                display: false
+                            }],
+                            yAxes: [{
+                                display: false,
+                                ticks: {
+                                }
+                            }]
+                        }
+                    }
+                };
+                if (viz.config.sparkstyle == "status") {
+                    item.areaCfg.options.scales.yAxes[0].ticks.min = 0;
+                    item.areaCfg.options.scales.yAxes[0].ticks.max = 1;
+                } else {
+                    if ($.trim(viz.config.sparkmax) !== "") {
+                        item.areaCfg.options.scales.yAxes[0].ticks.max = viz.config.sparkmax;
+                    }
+                    if ($.trim(viz.config.sparkmin) !== "") {
+                        item.areaCfg.options.scales.yAxes[0].ticks.min = viz.config.sparkmin;
+                    }
+                }
+                item.myArea = new Chart(item.ctx1, item.areaCfg);
+            }
+
+            // Figure out the thresholds
+            var thresholds_arr = [{
+                color: item.thresholdcol1, 
+                value: -Infinity
+            }];
+
+            for (i = 2; i < 7; i++){
+                if (item["thresholdval" + i] !== "" && ! isNaN(Number(item["thresholdval" + i]))) {
+                    var thresholdval = Number(item["thresholdval" + i]);
+                    thresholds_arr.push({
+                        color: item["thresholdcol" + i], 
+                        value: thresholdval
+                    });
+                }
+            }
+            //  We dont really need to sort the threshold array
+            thresholds_arr.sort(function(a, b) {
+                if (a.value < b.value)
+                    return -1;
+                if (a.value > b.value)
+                    return 1;
+                return 0;
+            });
+
+            //  title
+            var overlayTitle = viz.config.titletext;
+            if (viz.config.titletext === "" && item.title) {
+                overlayTitle = item.title;
+            }
+            if (viz.config.labels_as_html === "yes") {
+                item.$overlayTitle.html(overlayTitle);// allow html injection
+            } else {
+                item.$overlayTitle.text(overlayTitle);
+            }
+
+            //  subtitle
+            var overlaySubTitle = viz.config.subtitletext;
+            if (viz.config.subtitletext === "" && item.subtitle) {
+                overlaySubTitle = item.subtitle;
+            }
+            if (viz.config.labels_as_html === "yes") {
+                item.$overlaySubTitle.html(overlaySubTitle); // allow html injection
+            } else {
+                item.$overlaySubTitle.text(overlaySubTitle);
+            }
+
+            var value = Number(item.value);
+            var value_color = viz.config.nodatacolor;
+            if (item.value !== "" && ! isNaN(item.value)) {
+                // find the colour of the value
+                for (i = 0; i < thresholds_arr.length; i++){
+                    if (value > thresholds_arr[i].value) {
+                        value_color = thresholds_arr[i].color;
+                    }
+                }
+            }
+
+            // in-data override
+            if (item.hasOwnProperty("color")) {
+                value_color = item.color;
+            }
+            
+            var bg_color = "transparent";
+            if (viz.config.colormode !== "transparent") { 
+                bg_color = viz.getColorFromMode(viz.config.colormode, viz.config.color, value_color);
+            }
+            // in-data override
+            if (item.hasOwnProperty("bgcolor")) {
+                bg_color = item.bgcolor;
+            }
+
+            item.$container.add(item.$pulse).css("background-color", bg_color);
+            
+            if (viz.config.sparkorder !== "no") {
+                var block = null;
+                
+                if (item.hasOwnProperty("info_min_time") && item.hasOwnProperty("info_max_time")) {
+                    var diff = item.info_max_time - item.info_min_time;
+                    // this isnt perfect, but it should be close enough to be useful
+                    block = (diff / item.overtimedata.length);
+                }
+                item.areaCfg.data.labels = [];
+                //var tme_start = Math.floor((+item.info_min_time) / block) * block;
+                for (var m = 0; m < item.overtimedata.length; m++) {
+                    var tme = "";
+                    if (block !== null) {
+                        var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
+                        d.setUTCSeconds((block * m + Number(item.info_min_time)));
+                        tme = d.toLocaleString() + " - ";
+                    }
+                    if (viz.config.sparkstyle == "status") {
+                        if (item.overtimedata[m] >= 6) {
+                            item.areaCfg.data.labels.push(tme + "Error");
+                        } else if (item.overtimedata[m] >= 4) {
+                            item.areaCfg.data.labels.push(tme + "Warning");
+                        } else if (item.overtimedata[m] >= 2) {
+                            item.areaCfg.data.labels.push(tme + "Good");
+                        } else if (item.overtimedata[m] >= 0) {
+                            item.areaCfg.data.labels.push(tme + "Informational");
+                        } else  {
+                            item.areaCfg.data.labels.push(tme + "Unknown");
+                        }
+                    } else {
+                        item.areaCfg.data.labels.push(tme + item.overtimedata[m]);
+                    }
+                }
+
+                if (item.areaCfg.data.datasets.length === 0) {
+                    item.areaCfg.data.datasets.push({});
+                }
+                item.areaCfg.data.datasets[0].label = "";
+                if (viz.config.sparkstyle == "status") {
+                    item.areaCfg.data.datasets[0].data = [];
+                    item.areaCfg.data.datasets[0].backgroundColor = [];
+                    for (var n = 0; n < item.overtimedata.length; n++) {
+                        item.areaCfg.data.datasets[0].data.push(1);
+                        if (item.overtimedata[n] >= 6) {
+                            item.areaCfg.data.datasets[0].backgroundColor.push("#b22b32");
+                        } else if (item.overtimedata[n] >= 4) {
+                            item.areaCfg.data.datasets[0].backgroundColor.push("#d16f18");
+                        } else if (item.overtimedata[n] >= 2) {
+                            item.areaCfg.data.datasets[0].backgroundColor.push("#1a9035");
+                        } else if (item.overtimedata[n] >= 0) {
+                            item.areaCfg.data.datasets[0].backgroundColor.push("#009DD9");
+                        } else  {
+                            item.areaCfg.data.datasets[0].backgroundColor.push("#708794");
+                        }
+                    }
+                } else {
+                    item.areaCfg.data.datasets[0].borderColor = viz.getColorFromMode(viz.config.sparkcolormodeline, viz.config.sparkcolorline, value_color);
+                    item.areaCfg.data.datasets[0].backgroundColor = viz.getColorFromMode(viz.config.sparkcolormodefill, viz.config.sparkcolorfill, value_color);
+                    item.areaCfg.data.datasets[0].pointBorderColor = item.areaCfg.data.datasets[0].borderColor;
+                    item.areaCfg.data.datasets[0].pointBackgroundColor = item.areaCfg.data.datasets[0].borderColor;
+                    item.areaCfg.data.datasets[0].pointRadius = 1;
+                    if (viz.config.sparknulls === "zero") {
+                        item.areaCfg.data.datasets[0].data = [];
+                        for (var p = 0; p < item.overtimedata.length; p++) {
+                            item.areaCfg.data.datasets[0].data.push(item.overtimedata[p] === null ? 0 : item.overtimedata[p]);
+                        }
+                    } else {
+                        item.areaCfg.data.datasets[0].data = item.overtimedata;
+                    }
+                    item.areaCfg.data.datasets[0].fill = viz.config.sparkstyle == "area" ? 'origin' : false;
+                    item.areaCfg.data.datasets[0].spanGaps = (viz.config.sparknulls === "span");
+                }
+            }
+
+            var value_display = item.value;
+            // in-data override
+            if (item.hasOwnProperty("text")) {
+                value_display = item.text;
+            }
+
+            if ($.trim(value_display) === "") {
+                item.$overlayText.html("");
+
+            // if value_display is a number then we might need to apply number formatting
+            } else if (! isNaN(value_display)) {
+                item.$overlayText.html(viz.buildOverlay(value_display));
+
+            } else {
+                if (viz.config.labels_as_html === "yes") {
+                    item.$overlayText.html(value_display); // allow html injection
+                } else {
+                    item.$overlayText.text(value_display);
+                }
+            }
+            if (viz.config.textmode !== "static") {
+                item.$overlayText.css({"color": viz.getColorFromMode(viz.config.textmode, viz.config.textcolor, value_color)});
+            }
+            if (viz.config.titlecolormode !== "static") {
+                item.$overlayTitle.css({"color": viz.getColorFromMode(viz.config.titlecolormode, viz.config.titlecolor, value_color)});
+            }
+            if (viz.config.subtitlecolormode !== "static") {
+                item.$overlaySubTitle.css({"color": viz.getColorFromMode(viz.config.subtitlecolormode, viz.config.subtitlecolor, value_color)});
+            }
+
+            if (viz.config.sparkorder !== "no") {
+                item.myArea.update();
+            }
+
+            item.$canvas1.css("display", "block");
+        },
+
+        buildOverlay: function(val) {
+            var viz = this;
+            var ret = val;
+            val = Number(val);
+            if (viz.config.textprecision === "1") {
+                ret = Math.round(val);
+            } else if (viz.config.textprecision === "2") {
+                ret = Math.round(val * 10) / 10;
+            } else if (viz.config.textprecision === "3") {
+                ret = Math.round(val * 100) / 100;
+            } else if (viz.config.textprecision === "4") {
+                ret = Math.round(val * 1000) / 1000;
+            } else if (viz.config.textprecision === "5") {
+                ret = Math.round(val * 10000) / 10000;
+            } else if (viz.config.textprecision === "6") {
+                ret = Math.round(val * 100000) / 100000;
+            }
+
+            if (viz.config.textprocessing === "abr1") {
+                ret = viz.abbreviate(ret, 1);
+            } else if (viz.config.textprocessing === "abr2") {
+                ret = viz.abbreviate(ret, 2);
+            } else if (viz.config.textprocessing === "abr3") {
+                ret = viz.abbreviate(ret, 3);
+            } else if (viz.config.textprocessing === "abr4") {
+                ret = viz.abbreviate(ret, 4);
+            }
+
+            ret = ret.toString();
+            if (viz.config.textprocessing === "thou") {
+                ret = ret.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+            if (viz.config.textunit) {
+                // intentially allowing html injection. yolo
+                var unit = "<span class='number_set_viz-unit number_set_viz-unit-" + viz.config.textunitposition + "' style='font-size: " + viz.config.textunitsize + "%;'>" + (viz.config.textunitposition === "under" ? "<br />" : "") + viz.config.textunit + "</span>";
+                if (viz.config.textunitposition === "before") {
+                    ret = unit + ret;
+                } else {
+                    ret = ret + unit;
+                }
+            }
+            return ret;
+        },
+
+        abbreviate: function(number, decPlaces) {
+            var isNegative = number < 0;
+            var units = ['k', 'm', 'b', 't'];
+            number = Math.abs(number);
+            for (var i = units.length - 1; i >= 0; i--) {
+                var size = Math.pow(10, (i + 1) * 3);
+                if (size <= number) {
+                    number = number / size; 
+                    if ((number === 1000) && (i < units.length - 1)) {
+                        number = 1;
+                        i++;
+                    }
+                    if (number > 99) {
+                        number = Math.round(number * Math.pow(10, Math.max(decPlaces - 3, 0))) / Math.pow(10, Math.max(decPlaces - 3, 0));
+                    } else if (number > 9) {
+                        number = Math.round(number * Math.pow(10, Math.max(decPlaces - 2, 0))) / Math.pow(10, Math.max(decPlaces - 2, 0));
+                    } else {
+                        number = Math.round(number * Math.pow(10, Math.max(decPlaces - 1, 0))) / Math.pow(10, Math.max(decPlaces - 1, 0));
+                    }
+                    number += units[i];
+                    break;
+                }
+            }
+            return isNegative ? '-' + number : number;
+        },
+
+        getColorFromMode: function(mode, color1, color2) {
+            if (mode === "darker1") {
+                return tinycolor(color2).darken(10).toString();
+            } else if (mode === "darker2") {
+                return tinycolor(color2).darken(20).toString();
+            } else if (mode === "darker3") {
+                return tinycolor(color2).darken(40).toString();
+            } else if (mode === "lighter1") {
+                return tinycolor(color2).lighten(10).toString();
+            } else if (mode === "lighter2") {
+                return tinycolor(color2).lighten(20).toString();
+            } else if (mode === "lighter3") {
+                return tinycolor(color2).lighten(40).toString();
+            } else if (mode === "static") {
+                return color1;
+            }
+            return color2;
+        },
+
+        tooltip: function(tooltipModel, chart) {
+            var tooltipEl = $('.number_set_viz-tooltip');
+            // Create element on first render
+            if (tooltipEl.length === 0) {
+                tooltipEl = $('<div class="number_set_viz-tooltip"></div>').appendTo("body");
+            }
+        // Hide if no tooltip
+            if (tooltipModel.opacity === 0 || ! tooltipModel.body) {
+                tooltipEl.css("opacity","");
+                return;
+            }
+            tooltipEl.text(tooltipModel.dataPoints[0].label);
+            var position = chart._chart.canvas.getBoundingClientRect();
+            var styles = {
+                opacity: 1,
+                top: (position.top + window.pageYOffset + tooltipModel.caretY) + 'px'
+            };
+            var h_offset = position.left + window.pageXOffset + tooltipModel.caretX;
+            if (h_offset > (window.innerWidth * 0.8)) {
+                styles.right = window.innerWidth - h_offset + 30;
+                styles.left = "";
+            } else {
+                styles.left = h_offset + 30;
+                styles.right = "";
+            }
+            tooltipEl.css(styles);
+        },
+
+        copyTextToClipboard: function(text) {
+            var viz = this;
+            if (!navigator.clipboard) {
+                viz.fallbackCopyTextToClipboard(text);
+            } else {
+                navigator.clipboard.writeText(text).then(function() {
+                    viz.toast('Copied to clipboard! (now paste into Format menu > Advanced)');
+                }, function (err) {
+                    console.error('Async: Could not copy node positions to clipboard. Please hit F12 and check the console log for the positions string. This should be pasted into the Advanced settings.', err);
+                });
+            }
+        },
+
+        fallbackCopyTextToClipboard: function(text) {
+            var viz = this;
+            var textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                var successful = document.execCommand('copy');
+                if (successful) {
+                    viz.toast('Copied to clipboard! (now paste into Format menu > Advanced)');
+                } else {
+                    console.error('Fallback2: Could not copy node positions to clipboard. Please hit F12 and check the console log for the positions string. This should be pasted into the Advanced settings.', err);
+                }
+            } catch (err) {
+                console.error('Fallback: Could not copy node positions to clipboard. Please hit F12 and check the console log for the positions string. This should be pasted into the Advanced settings.', err);
+            }
+            document.body.removeChild(textArea);
+        },
+
+        // Toast popup message
+        toast: function(message) {
+            var t = $("<div style='background-color: #53a051; width: 432px;  height: 60px; position: fixed; top: 100px; margin-left: -116px;  left: 50%; line-height: 60px; padding: 0 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23); color: white; opacity: 0; transform: translateY(30px); text-align: center; transition: all 300ms;'><span></span></div>");
+            t.appendTo("body").find('span').text(message);
+            setTimeout(function(){
+                t.css({'opacity': 1, 'transform': 'translateY(0)'});
+                setTimeout(function(){
+                    t.css({'opacity': 0, 'transform': 'translateY(30px)'});
+                    setTimeout(function(){
+                        t.remove();
+                    },300);
+                },3000);
+            },10);
+        },
+
+        // Override to respond to re-sizing events
+        reflow: function() {
+            this.scheduleDraw();
+        },
+
+        // Search data params
+        getInitialDataParams: function() {
+            return ({
+                outputMode: SplunkVisualizationBase.ROW_MAJOR_OUTPUT_MODE,
+                count: 10000
+            });
+        },
+    };
+
+    return SplunkVisualizationBase.extend(vizObj);
+});
