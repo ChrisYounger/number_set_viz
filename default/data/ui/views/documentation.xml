@@ -64,7 +64,7 @@
 </style>
 <div class="number_sit_viz" style="max-width: 1200px; margin: 0 auto;">
 <h2>Number Set Viz</h2>
-<p>A visualization for Splunk that displays a collection of numbers in a grid or absolute layout.</p>
+<p>A visualization for displaying a collection of numbers either as an auto-sizing grid or absolutly positioned - typically over a background image. Each item can include a graph showing values overtime.</p>
 <p>
 Copyright (C) 2023 Chris Younger | <a href="https://github.com/ChrisYounger/number_set_viz">Source code</a> | <a href="https://splunkbase.splunk.com/app//">Splunkbase</a> | <a href="https://answers.splunk.com/app/questions/.html">Questions, Bugs or Suggestions</a> | <a href="https://splunkbase.splunk.com/apps/#/author/chrisyoungerjds">My Splunk apps</a>
           </p>
@@ -113,21 +113,21 @@ Copyright (C) 2023 Chris Younger | <a href="https://github.com/ChrisYounger/numb
                   <code>value</code>
                 </td>
 <td>Numeric</td>
-<td>The value which will be used for threshold calculation and to set the gauge position or spinner speed. Viz will attempt to guess this field if not explicity supplied.</td>
+<td>The value which will be used to calculate the item state, based  on the threshold settings. It is also shown in the middle (by default).</td>
 </tr>
 <tr>
 <td>
                   <code>title</code>
                 </td>
 <td>String</td>
-<td>The title of the metric which will be shown as a text overlay. Viz will attempt to guess this field if not explicity supplied.</td>
+<td>The title of the metric which will be shown as a text overlay at the top (by default). Note that if a "title" is set in the "Format" menu then it will override what is set in the data.</td>
 </tr>
 <tr>
 <td>
                   <code>sparkline</code>
                 </td>
 <td>sparkline array</td>
-<td>The sparkline field to use as the area or line chart overlay. Viz will attempt to guess this field if not explicity supplied.</td>
+<td>The sparkline field to use as the area, column or line chart overlay.</td>
 </tr>
 <tr>
 <td>
@@ -141,7 +141,14 @@ Copyright (C) 2023 Chris Younger | <a href="https://github.com/ChrisYounger/numb
                   <code>color</code>
                 </td>
 <td>HTML color code</td>
-<td>Set the threshold color (ignoring thresholds calculations). By using this field you can use any threshold logic you like in the search query.</td>
+<td>Set the threshold (aka "status") color (therefore disable thresholds calculations). By using this field you can use any threshold logic you like in the search query.</td>
+</tr>
+<tr>
+<td>
+                  <code>bgcolor</code>
+                </td>
+<td>HTML color code</td>
+<td>Similar to above but will only overide the background color (does not change the "status/threshold" color). The threshold color can still be used by other components.</td>
 </tr>
 <tr>
 <td>
@@ -159,13 +166,6 @@ Copyright (C) 2023 Chris Younger | <a href="https://github.com/ChrisYounger/numb
 </tr>
 <tr>
 <td>
-                  <code>bgcolor</code>
-                </td>
-<td>HTML color code</td>
-<td>Similar to above but will only overide the background color. The threshold color can still be used by other components.</td>
-</tr>
-<tr>
-<td>
                   <code>text</code>
                 </td>
 <td>String</td>
@@ -176,7 +176,7 @@ Copyright (C) 2023 Chris Younger | <a href="https://github.com/ChrisYounger/numb
                   <code>subtitle</code>
                 </td>
 <td>String</td>
-<td>Override the subtitle value. Note that subtitle must be blank in the formatting options</td>
+<td>Override the subtitle value. Note that subtitle must be blank in the "Format" menu options.</td>
 </tr>
 <tr>
 <td>
@@ -234,7 +234,6 @@ Copyright (C) 2023 Chris Younger | <a href="https://github.com/ChrisYounger/numb
 <li>Absolute mode allow you to drag items around the canvas and place them where you want. You need to make sure your data includes an "id" field (for many situations this can be a copy of the 'title' field <code>| eval id = title</code>).</li>
 <li>When you drag items around, a button will display "Copy positions to clipboard". Click this button and then paste the string (CTRL-V) into the 'Positions' textbox. This is how the visualization will know where to place items the next time it loads.</li>
 <li>Lock width should be used whenever using absolute mode. Otherwise items might not be positioned properly when dashboard viewers with different screen sizes view the dashboard.</li>
-<li>Background image is a URL to an image to show behind the items. You can upload a backgound image to any app (Apps &gt; Manage Apps &gt; Select App &gt; Edit Properties &gt; Upload Asset OR Use <a href="https://splunkbase.splunk.com/app/4353" target="_blank">Config Explorer</a> to upload the file to <code>etc/apps/APPNAME/appserver/static/</code>) and then access the file as <code>/static/app/APPNAME/FILENAME.PNG</code>. Alternativly you can use the full URL to an image hosted anywhere that your dashboard viewers can access (e.g. https://example.com/image.png).</li>
 <li>Background image is a URL to an image to show behind the items. You can upload a backgound image to any app (Apps &gt; Manage Apps &gt; Select App &gt; Edit Properties &gt; Upload Asset OR Use <a href="https://splunkbase.splunk.com/app/4353" target="_blank">Config Explorer</a> to upload the file to <code>etc/apps/APPNAME/appserver/static/</code>) and then access the file as <code>/static/app/APPNAME/FILENAME.PNG</code>. Alternativly you can use the full URL to an image hosted anywhere that your dashboard viewers can access (e.g. https://example.com/image.png).</li>
 <li>Allow HTML will mean that HTML snippets can be passed in data fields (text, title, subtitle) and it will be rendered as HTML</li>
 </ol>
