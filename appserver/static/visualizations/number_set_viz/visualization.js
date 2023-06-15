@@ -359,7 +359,7 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	            // Can't continue becuase too many rows
 	            if (viz.item.length > Number(viz.config.maxrows)) {
 	                viz.$container_wrap.empty();
-	                viz.$container_wrap.append('<div style="text-align: center; width:100%; color: #818d99; line-height: 3;">Too many rows of data (Total rows:' + viz.item.length + ', Limit: ' + viz.config.maxrows + ') Increase the max items in the Format menu &lt; Advanced</div>');
+	                viz.$container_wrap.append('<div style="text-align: center; width:100%; color: #818d99; line-height: 3;">Too many rows of data (Total rows:' + viz.item.length + ', Limit: ' + viz.config.maxrows + ')</div>');
 	                return;
 	            }
 
