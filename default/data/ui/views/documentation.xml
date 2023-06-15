@@ -388,7 +388,7 @@ Here is an example showing an icon being displayed:
       <viz type="number_set_viz.number_set_viz">
         <title>Absolute layout mode with border radius 50%</title>
         <search>
-          <query>| makeresults | eval text =  mvappend("Item1:50","Item2:50","Item3:50","Item4:50","Item5:75","Item6:75","Item7:75","Item8:75","Item9:100","Item10:100") | mvexpand text | rex field=text "(?&lt;title&gt;[^:]+):(?&lt;height&gt;.*)" | eval value = random()%100 | eval value = if(value &gt; 30,100,value) | eval id = title | table id value height </query>
+          <query>| makeresults $showpage3$ | eval text =  mvappend("Item1:50","Item2:50","Item3:50","Item4:50","Item5:75","Item6:75","Item7:75","Item8:75","Item9:100","Item10:100") | mvexpand text | rex field=text "(?&lt;title&gt;[^:]+):(?&lt;height&gt;.*)" | eval value = random()%100 | eval value = if(value &gt; 30,100,value) | eval id = title | table id value height </query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>

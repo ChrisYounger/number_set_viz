@@ -69,4 +69,3 @@ display.visualizations.custom.number_set_viz.number_set_viz.animation = <string>
 display.visualizations.custom.number_set_viz.number_set_viz.shadows = <string>
 display.visualizations.custom.number_set_viz.number_set_viz.radius = <string>
 display.visualizations.custom.number_set_viz.number_set_viz.labels_as_html = <string>
-display.visualizations.custom.number_set_viz.number_set_viz.maxrows = <string>

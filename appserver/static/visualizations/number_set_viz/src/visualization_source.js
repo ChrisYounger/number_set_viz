@@ -27,12 +27,6 @@ function(
             }
             viz.$container_wrap = $(viz.el);
             viz.$container_wrap.addClass("number_set_viz-container");
-
-
-            // From https://stackoverflow.com/a/5207328
-            $.easing.easeOutExpo = function (x, t, b, c, d) {
-                return (t==d) ? b+c : c * (-Math.pow(2, -10 * t/d) + 1) + b;
-            };
         },
 
 
@@ -48,7 +42,7 @@ function(
                 heightmax: "300",
                 ratio: "200",
                 margin: "10",
-                maxrows: "200",
+                maxrows: "10000",
                 nodatacolor: "#0178c7",
                 thresholdcol1: "#1a9035",
                 thresholdcol2: "#d16f18",
@@ -202,6 +196,38 @@ function(
                 return;
             }
 
+            if (viz.config.absolute === "yes") { 
+                viz.positions = {};
+                if (viz.config.positions !== "") {
+                    try {
+                        viz.positions = JSON.parse("{" + viz.config.positions + "}");
+                    } catch (e) {
+                        console.log("Unable to load initial positioning as it isnt a valid JSON array");
+                    }
+                }
+                if (viz.config.coarse_positions === "yes") {
+                    viz.positionMultiplier = 100;
+                } else {
+                    viz.positionMultiplier = 1000;
+                }
+                // Add a button that allows copying the current positions to the clipboard
+                viz.positionsButton = $("<span class='number_set_viz-copylink btn-pill'><i class='far fa-clipboard'></i> Copy positions to clipboard</span>")
+                    .appendTo(viz.$container_wrap)
+                    .on("click", function(e){
+                        var dump = JSON.stringify(viz.positions);
+                        console.log(dump.substr(1,dump.length-2));
+                        viz.copyTextToClipboard(dump.substr(1,dump.length-2));
+                        e.stopPropagation();
+                    }).on("mouseover",function(){
+                        viz.positionsButton.css({"opacity": "1"});
+                    }).on("mouseout", function(){
+                        clearTimeout(viz.positionsButtonTimeout);
+                        viz.positionsButtonTimeout = setTimeout(function(){
+                            viz.positionsButton.css("opacity",0);
+                        }, 5000);
+                    });
+            }
+
             var item, i;
 
             var allowedOverrides = {
@@ -232,9 +258,9 @@ function(
             };
 
             viz.item = [];
-            for (i = 0; i < viz.data.rows.length; i++) {
+            for (var itemidx = 0; itemidx < viz.data.rows.length; itemidx++) {
                 item = {
-                    id: i,
+                    id: itemidx,
                     overtimedata: [],
                     title: "",
                     value: null,
@@ -246,17 +272,39 @@ function(
                 for (var k = 0; k < viz.data.fields.length; k++) {
                     if (allowedOverrides.hasOwnProperty(viz.data.fields[k].name)) {
                         if (viz.data.fields[k].name === "sparkline") {
-                            item[allowedOverrides[viz.data.fields[k].name]] = viz.getSparkline(viz.data.rows[i][k]);
+                            item[allowedOverrides[viz.data.fields[k].name]] = viz.getSparkline(viz.data.rows[itemidx][k]);
                         } else {
-                            item[allowedOverrides[viz.data.fields[k].name]] = viz.data.rows[i][k];
+                            item[allowedOverrides[viz.data.fields[k].name]] = viz.data.rows[itemidx][k];
                         }
                     }
                 }
                 if (item.value === null) {
-                    if (item.overtimedata.length) {
-                        item.value = item.overtimedata[item.overtimedata.length - 1];
+                    item.value = "";
+                }
+
+                // if the data doesnt set the thresholdcol's and val's then we set them based from the viz config
+                for (var thresidx = 1; thresidx <= 6; thresidx++) {
+                    if (! item.hasOwnProperty("thresholdcol" + thresidx)) {
+                        item["thresholdcol" + thresidx] = viz.config["thresholdcol" + thresidx];
+                    }
+                    if (! item.hasOwnProperty("thresholdval" + thresidx)) {
+                        item["thresholdval" + thresidx] = viz.config["thresholdval" + thresidx];
                     } else {
-                        item.value = "";
+                        item["thresholdval" + thresidx] = Number(item["thresholdval" + thresidx]);
+                    }
+                }
+
+                if (! Array.isArray(item.overtimedata)) {
+                    item.overtimedata = [];
+                }
+
+                if (viz.config.absolute === "yes") {
+                    item.item_top = 50;
+                    item.item_left = 50;
+                    if (viz.positions.hasOwnProperty(item.id)) {
+                        var dataxy = viz.positions[item.id].split(",");
+                        item.item_top = parseFloat(dataxy[1]) / 100 * viz.config.containerHeight;
+                        item.item_left = parseFloat(dataxy[0]) / 100 * viz.config.containerWidth;
                     }
                 }
             }
@@ -294,38 +342,15 @@ function(
             var best = { area: 0, cols: 0, rows: 0, width: 0, height: 0 };
 
             if (viz.config.absolute === "yes") { 
-                viz.positions = {};
-                if (viz.config.positions !== "") {
-                    try {
-                        viz.positions = JSON.parse("{" + viz.config.positions + "}");
-                    } catch (e) {
-                        console.log("Unable to load initial positioning as it isnt a valid JSON array");
-                    }
-                }
-                if (viz.config.coarse_positions === "yes") {
-                    viz.positionMultiplier = 100;
-                } else {
-                    viz.positionMultiplier = 1000;
-                }
-                // Add a button that allows copying the current positions to the clipboard
-                viz.positionsButton = $("<span class='number_set_viz-copylink btn-pill'><i class='far fa-clipboard'></i> Copy positions to clipboard</span>")
-                    .appendTo(viz.$container_wrap)
-                    .on("click", function(e){
-                        var dump = JSON.stringify(viz.positions);
-                        console.log(dump.substr(1,dump.length-2));
-                        viz.copyTextToClipboard(dump.substr(1,dump.length-2));
-                        e.stopPropagation();
-                    }).on("mouseover",function(){
-                        viz.positionsButton.css({"opacity": "1"});
-                    }).on("mouseout", function(){
-                        clearTimeout(viz.positionsButtonTimeout);
-                        viz.positionsButtonTimeout = setTimeout(function(){
-                            viz.positionsButton.css("opacity",0);
-                        }, 5000);
-                    });
-
                 viz.config.itemHeight = viz.config.heightmin;
                 viz.config.itemWidth = viz.config.itemHeight * viz.config.aspectRatio;
+                viz.config.itemsPerRow = viz.item.length;
+                viz.config.rowsPerPage = 1;
+                // sort items from top left to bottom right for a nice animation effect
+                viz.item.sort(function(a,b){
+                    return (a.item_left + a.item_top) - (b.item_left + b.item_top);
+                });
+
             } else {
                 for (var cols = viz.item.length; cols > 0; cols--) {
                     var rows = Math.ceil(viz.item.length / cols);
@@ -347,16 +372,54 @@ function(
                         best = {"area":area, "width":width, "height":height, "rows":rows, "cols":cols};
                     }
                 }
-                best.height = Math.min(viz.config.heightmax, best.height);
+                best.height = Math.min(Math.max(viz.config.heightmax, (viz.config.containerHeight - 20)), best.height);
+                // now that we have figured out the optimal size, we need to check that its bigger than the smallest size of
+                // - the minimum size defined in the format menu
+                // - the container height
+                // - the container width (considering aspect ratio)
+                var minSize = Math.min(viz.config.heightmin, (viz.config.containerHeight - 20), ((viz.config.containerWidth - 20)/viz.config.aspectRatio));
                 // Check to make sure we dont breech the minimum item size when trying to fit in the available space. otherwise we need to use a scroll bar
-                if (viz.config.heightmin > best.height) {
-                    best.height = viz.config.heightmin;
+                if (minSize > best.height) {
+                    best.height = minSize;
                     best.width = best.height * viz.config.aspectRatio;
                     best.rows = Math.ceil(viz.item.length / (Math.floor((viz.config.containerWidth - 20) / best.width)));
-                    viz.$container_wrap.css("overflow-y","scroll");
+                    viz.config.rowsPerPage = Math.max(1, Math.floor((viz.config.containerHeight - 20) / best.height));
+                    viz.config.pageOffset = 0;
+                    viz.config.totalPages = Math.ceil(viz.item.length / (viz.config.rowsPerPage * Math.ceil(viz.item.length / best.rows)));
+
+                    var $paginationContainer = $("<div class='number_set_viz-paginator'>"+
+                    "<i class='number_set_viz-prev fas fa-chevron-circle-left number_set_viz-prev-disabled' tooltip='Previous page'></i>"+
+                    "<span class='number_set_viz-pagenum'>1 of " + viz.config.totalPages + "</span>"+
+                    "<i class='number_set_viz-next fas fa-chevron-circle-right' tooltip='Next page'></i></div>").appendTo(viz.$container_wrap);
+                    var prevButton = $paginationContainer.find(".number_set_viz-prev");
+                    var nextButton = $paginationContainer.find(".number_set_viz-next");
+                    var pageNum = $paginationContainer.find(".number_set_viz-pagenum");
+                    prevButton.on("click", function(){
+                        if (prevButton.hasClass("number_set_viz-prev-disabled")) { return; }
+                        viz.$container_wrap.children(".number_set_viz-wrap_item").remove();
+                        viz.config.pageOffset--;
+                        viz.doDrawOfPage(viz.config.pageOffset);
+                        pageNum.text((viz.config.pageOffset+1) + " of " + viz.config.totalPages)
+                        nextButton.removeClass('number_set_viz-prev-disabled');
+                        if (viz.config.pageOffset == 0) {
+                            prevButton.addClass('number_set_viz-prev-disabled');
+                        }
+                    })
+                    nextButton.on("click", function(){
+                        if (nextButton.hasClass("number_set_viz-prev-disabled")) { return; }
+                        viz.$container_wrap.children(".number_set_viz-wrap_item").remove();
+                        viz.config.pageOffset++;
+                        pageNum.text((viz.config.pageOffset+1) + " of " + viz.config.totalPages)
+                        viz.doDrawOfPage(viz.config.pageOffset);
+                        prevButton.removeClass('number_set_viz-prev-disabled');
+                        if (viz.config.pageOffset + 2 > viz.config.totalPages) {
+                            nextButton.addClass('number_set_viz-prev-disabled');
+                        }
+                    })
+                } else {
+                    viz.config.rowsPerPage = best.rows;
                 }
 
-// TODO if these dont fit, we need to cut them off rather than let them flow off the screen
                 best.width = best.height * viz.config.aspectRatio;
                 // Figure out how many items per row would fit is we better distribute items by row
                 viz.config.itemsPerRow = Math.ceil(viz.item.length / best.rows);
@@ -365,117 +428,35 @@ function(
                 viz.config.containerLeftMargin = ((viz.config.containerWidth - (viz.config.itemsPerRow * (viz.config.itemWidth + (viz.config.margin/2)) - (viz.config.margin/2))) / 2);
             }
 
-
-            for (i = 0; i < viz.item.length; i++) {
-                // Two final data validation checks
-                if (viz.item[i].value === null) { 
-                    viz.item[i].value = "";
-                }
-                if (! Array.isArray(viz.item[i].overtimedata)) {
-                    viz.item[i].overtimedata = [];
-                }
-                // Only draw if container has size. Otherwise its hidden
-                if (viz.config.containerWidth > 0) {
-                    viz.doDrawItem(i);
-                }
+            viz.animationDelays = [];
+            for (var i=0; i < viz.config.itemsPerRow; i++) {
+                viz.animationDelays.push(Math.round(1000 * (-Math.pow(2, -10 * i/viz.item.length) + 1)))
             }
-        
-            if (viz.config.animation === "yes" ) {
-                if (viz.config.absolute === "yes") { 
-                    // sort items from top left to bottom right for a nice animation effect
-                    viz.item.sort(function(a,b){
-                        return (a.item_left + a.item_top) - (b.item_left + b.item_top);
-                    });
-                    
-                    setTimeout(function(){
-                        var start = performance.now();
-                        $({ i:0, track:0 }).animate({ i:viz.item.length }, {
-                            duration: 1000,
-                            easing: 'easeOutExpo',
-                            step: function (num) {
-                                var now = Math.round(this.i);
-                                for (; this.track < now; this.track++) {
-                                    // the viz.item can change while we are animating
-                                    if (viz.item.length > this.track && viz.item[this.track].hasOwnProperty("$container")) {
-                                        viz.item[this.track].$container.data("number_set_viz-time", (performance.now() - start)).addClass("number_set_viz-animatein");
-                                    }
-                                }
-                            }
-                        });
-                        if ($(".dashboard-body>.dashboard.view-mode").length > 0) {
-                            $({ i:0, track:0 }).animate({ i:viz.item.length }, {
-                                duration: 5000,
-                                easing: 'easeOutExpo',
-                                step: function () {
-                                    var now = Math.ceil(this.i);
-                                    for (; this.track < now; this.track++) {
-                                        // the viz.item can change while we are animating
-                                        if (viz.item.length > this.track && viz.item[this.track].hasOwnProperty("$container")) {
-                                            // dont animate objects still sitting at teh top left becuase it looks dumb 
-                                            if (viz.item[this.track].$container.css("top") !== "50px" || viz.item[this.track].$container.css("left") !== "50px") {
-                                                viz.item[this.track].$container.addClass("number_set_viz-pulsego");
-                                            }
-                                        }
-                                    }
-                                }
-                            });
-                        }
-                    // need to wait 500 ms becuase sometimes there is a double draw on page load that looks stupid
-                    },500);
-                } else {
 
-                    setTimeout(function(){
-                        var start = performance.now();
-                        $({ i:0, track:0 }).animate({ i:viz.config.itemsPerRow }, {
-                            duration: 1000,
-                            easing: 'easeOutExpo',
-                            step: function () {
-                                var now = Math.round(this.i);
-                                for (; this.track < now; this.track++) {
-                                    for (var itemidx=this.track;itemidx < viz.item.length; itemidx+=viz.config.itemsPerRow) {
-                                        viz.item[itemidx].$container.data("number_set_viz-time", (performance.now() - start)).addClass("number_set_viz-animatein");
-                                    }
-                                }
-                            }
-                        });
+            viz.config.itemsPerPage = viz.config.rowsPerPage * viz.config.itemsPerRow;
 
-                    // need to wait 500 ms becuase sometimes there is a double draw on page load that looks stupid
-                    },500);
-                }
-            }
-        },
-        
-        getSparkline: function(obj){
-            if (Array.isArray(obj)) {
-                if (obj[0] === "##__SPARKLINE__##") {
-                    return obj.slice(1);
-                } else {
-                    return obj;
-                }
-            }
-            return [];
+            viz.doDrawOfPage(0);
         },
 
-        sanitise: function(val) {
-            return val.toString().replace(/\W+/g, "_");
-        },
 
-        doDrawItem: function(itemId){
+
+        doDrawOfPage: function(pageOffset){
             var viz = this;
-            viz.distance_dragged = 0;
-
-            var item = viz.item[itemId];
-
-            for (var i = 1; i <= 6; i++) {
-                if (! item.hasOwnProperty("thresholdcol" + i)) {
-                    item["thresholdcol" + i] = viz.config["thresholdcol" + i];
-                }
-                if (! item.hasOwnProperty("thresholdval" + i)) {
-                    item["thresholdval" + i] = viz.config["thresholdval" + i];
-                } else {
-                    item["thresholdval" + i] = Number(item["thresholdval" + i]);
+            var itemOffset = viz.config.itemsPerPage * pageOffset;
+            // Only draw if container has size. Otherwise its hidden
+            if (viz.config.containerWidth > 0) {
+                for (var i = 0; i < viz.config.itemsPerPage; i++) {
+                    if ((itemOffset + i) < viz.item.length) {
+                        viz.doDrawItem(itemOffset + i, i);
+                    }
                 }
             }
+        },
+
+
+        doDrawItem: function(itemId, itemOffset){
+            var viz = this;
+            var item = viz.item[itemId];
 
             item.$canvas1 = $('<canvas class="number_set_viz-canvas_areachart"></canvas>');
             item.$overlayText = $('<div class="number_set_viz-overlay_text"></div>');
@@ -498,11 +479,27 @@ function(
 
             if (viz.config.animation !== "yes" ) {
                 item.$container.addClass("number_set_viz-animatein");
+            } else {
+                var animationOffset = itemOffset;
+                if (viz.config.absolute !== "yes") { 
+                    animationOffset = itemOffset % viz.config.itemsPerRow;
+                }
+                setTimeout(function(){
+                    item.$container.data("number_set_viz-time", viz.animationDelays[animationOffset]).addClass("number_set_viz-animatein");
+                }, 500 + viz.animationDelays[animationOffset]);
+    
+                if (viz.config.absolute === "yes" && (item.$container.css("top") !== "50px" || item.$container.css("left") !== "50px")) {
+                    // add the pulse animation if the item isnt in the top left default position
+                    setTimeout(function(){
+                        item.$container.addClass("number_set_viz-pulsego");
+                    }, 500 + (3 * viz.animationDelays[animationOffset]));
+                }
+
             }
             // Drilldown only available if there is a title field
             item.$container.css("cursor","pointer").on("click", function(browserEvent){
                 // if the person was dragging we dont want to accidentally drilldown
-                if (viz.distance_dragged > 0) {
+                if (viz.hasOwnProperty("distance_dragged") && viz.distance_dragged > 0) {
                     return;
                 }
                 var defaultTokenModel = splunkjs.mvc.Components.get('default');
@@ -534,7 +531,7 @@ function(
 
             if (viz.config.absolute === "yes") { 
                 
-                item.$container.addClass("number_set_viz-absolute").css("z-index", itemId);
+                item.$container.addClass("number_set_viz-absolute").css("z-index", itemOffset+1);
 
                 item.$container.on("mousedown", function(event) {
                     // Dont allow dragging in view mode
@@ -595,19 +592,11 @@ function(
                     item.width = item.height * viz.config.aspectRatio;
                 }
 
-                item.item_top = "50";
-                item.item_left = "50";
-                if (viz.positions.hasOwnProperty(item.id)) {
-                    var dataxy = viz.positions[item.id].split(",");
-                    item.item_top = parseFloat(dataxy[1]) / 100 * viz.config.containerHeight;
-                    item.item_left = parseFloat(dataxy[0]) / 100 * viz.config.containerWidth;
-                }
-
             } else {
                 item.height = viz.config.itemHeight;
                 item.width = viz.config.itemWidth;
-                item.item_top = 10 + (Math.floor(itemId / viz.config.itemsPerRow) * (item.height + (viz.config.margin/2)));
-                item.item_left = viz.config.containerLeftMargin + ((itemId % viz.config.itemsPerRow) * (item.width + (viz.config.margin/2)));
+                item.item_top = 10 + (Math.floor(itemOffset / viz.config.itemsPerRow) * (item.height + (viz.config.margin/2)));
+                item.item_left = viz.config.containerLeftMargin + ((itemOffset % viz.config.itemsPerRow) * (item.width + (viz.config.margin/2)));
             }
 
             item.$container.css({
@@ -811,9 +800,8 @@ function(
                     }
                 }
             }
-
             // in-data override
-            if (item.hasOwnProperty("color")) {
+            if (item.hasOwnProperty("color") && $.trim(item.color) !== "") {
                 value_color = item.color;
             }
             
@@ -822,7 +810,7 @@ function(
                 bg_color = viz.getColorFromMode(viz.config.colormode, viz.config.color, value_color);
             }
             // in-data override
-            if (item.hasOwnProperty("bgcolor")) {
+            if (item.hasOwnProperty("bgcolor") && $.trim(item.bgcolor) !== "") {
                 bg_color = item.bgcolor;
             }
 
@@ -981,6 +969,21 @@ function(
                 }
             }
             return ret;
+        },
+
+        getSparkline: function(obj){
+            if (Array.isArray(obj)) {
+                if (obj[0] === "##__SPARKLINE__##") {
+                    return obj.slice(1);
+                } else {
+                    return obj;
+                }
+            }
+            return [];
+        },
+
+        sanitise: function(val) {
+            return val.toString().replace(/\W+/g, "_");
         },
 
         abbreviate: function(number, decPlaces) {
