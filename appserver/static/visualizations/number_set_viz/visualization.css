@@ -76,6 +76,7 @@
     opacity: 0;
     padding: 5px;
     border-radius: 2px;
+    background-color: white;
 }
 .dashboard.edit-mode .number_set_viz-copylink {
     left: auto;

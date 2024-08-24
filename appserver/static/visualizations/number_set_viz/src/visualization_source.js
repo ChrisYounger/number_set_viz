@@ -31,6 +31,7 @@ function(
 
 
         formatData: function(data) {
+            console.log(JSON.stringify(data.meta));
             return data;
         },
 
@@ -196,6 +197,10 @@ function(
                 return;
             }
 
+            if (viz.positionsButton) {
+                viz.positionsButton.remove();
+            }
+            
             if (viz.config.absolute === "yes") { 
                 viz.positions = {};
                 if (viz.config.positions !== "") {
@@ -323,11 +328,19 @@ function(
                 viz.$container_wrap.css("background", "top center no-repeat url(" + viz.config.background + ")");
             }
 
+            // check its been at least 20 seconds since the last animation so that we dont make the viewer sick with too much animation
+            viz.animationDebounceOK = true;
+            if (viz.hasOwnProperty("lastDrawn") && viz.lastDrawn > (Date.now() - 13000)) {
+                viz.animationDebounceOK = false;
+            } else {
+                viz.lastDrawn = Date.now();
+            }
+
             // For any items still in teh container, animate them off the screen and remove them
-            viz.$container_wrap.children().each(function(){
+            viz.$container_wrap.children(".number_set_viz-wrap_item").each(function(){
                 var $this = $(this);
                 var d = $this.data("number_set_viz-time");
-                if (typeof d !== "undefined") {
+                if (typeof d !== "undefined" && viz.animationDebounceOK) {
                     setTimeout(function(){
                         $this[0].addEventListener('transitionend', function(){ 
                             $(this).remove();
@@ -372,7 +385,7 @@ function(
                         best = {"area":area, "width":width, "height":height, "rows":rows, "cols":cols};
                     }
                 }
-                best.height = Math.min(Math.max(viz.config.heightmax, (viz.config.containerHeight - 20)), best.height);
+                best.height = Math.min(viz.config.heightmax, (viz.config.containerHeight - 20), best.height);
                 // now that we have figured out the optimal size, we need to check that its bigger than the smallest size of
                 // - the minimum size defined in the format menu
                 // - the container height
@@ -484,10 +497,14 @@ function(
                 if (viz.config.absolute !== "yes") { 
                     animationOffset = itemOffset % viz.config.itemsPerRow;
                 }
-                setTimeout(function(){
+                if (viz.animationDebounceOK) {
+                    setTimeout(function(){
+                        item.$container.data("number_set_viz-time", viz.animationDelays[animationOffset]).addClass("number_set_viz-animatein");
+                    }, 500 + viz.animationDelays[animationOffset]);
+                } else {
                     item.$container.data("number_set_viz-time", viz.animationDelays[animationOffset]).addClass("number_set_viz-animatein");
-                }, 500 + viz.animationDelays[animationOffset]);
-    
+                }
+
                 if (viz.config.absolute === "yes" && (item.$container.css("top") !== "50px" || item.$container.css("left") !== "50px")) {
                     // add the pulse animation if the item isnt in the top left default position
                     setTimeout(function(){
@@ -547,14 +564,16 @@ function(
                     // taking initial shifts into account
                     function moveAt(pageX, pageY) {
                         var newX = (pageX - shiftX);
-                        var newY =(pageY - shiftY);
-                        var newXAdj = (Math.round(newX / viz.config.containerWidth * viz.positionMultiplier) / (viz.positionMultiplier / 100));
-                        var newYAdj = (Math.round(newY / viz.config.containerHeight * viz.positionMultiplier) / (viz.positionMultiplier / 100));
+                        var newY = (pageY - shiftY);
+
+                        // max is 98 instead of 100, becuase otherwise it will be off the screen
+                        var newXAdj = Math.max(0, Math.min(98, (Math.round(newX / viz.config.containerWidth * viz.positionMultiplier) / (viz.positionMultiplier / 100))));
+                        var newYAdj = Math.max(0, Math.min(98, (Math.round(newY / viz.config.containerHeight * viz.positionMultiplier) / (viz.positionMultiplier / 100))));
 
                         viz.positions[item.id] = "" + newXAdj + "," + newYAdj;
-                        // honor the corse positions
-                        item.item_left = Math.min((viz.config.containerWidth - 10), Math.max(0, (parseFloat(newXAdj) / 100 * viz.config.containerWidth)));
-                        item.item_top = Math.min((viz.config.containerHeight - 10), Math.max(0, (parseFloat(newYAdj) / 100 * viz.config.containerHeight)));
+                        // honor the coarse positions
+                        item.item_left = parseFloat(newXAdj) / 100 * viz.config.containerWidth;
+                        item.item_top = parseFloat(newYAdj) / 100 * viz.config.containerHeight;
 
                         item.$container.css({
                             "top": item.item_top + "px",
