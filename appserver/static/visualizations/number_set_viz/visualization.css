@@ -67,6 +67,12 @@
         opacity: 0;
     }
 } 
+.number_set_viz-unexpected_data_fmt {
+  text-align: center; 
+  width:100%; 
+  color: #818d99; 
+  line-height: 3;
+}
 .number_set_viz-copylink {
     position: absolute;
     top: 0px;

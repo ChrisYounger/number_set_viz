@@ -115,7 +115,7 @@ function(
                 labels_as_html: "no",
                 shadows: "no",
                 radius: "0",
-                animation: "yes",
+                animation: "no",
             };
 
             // Override defaults with selected items from the UI
@@ -186,16 +186,18 @@ function(
             // Can't continue becuase of data issues
             if (! foundField) {
                 viz.$container_wrap.empty();
-                viz.$container_wrap.append('<div style="text-align: center; width:100%; color: #818d99; line-height: 3;">Unexpected data format.<br />Provide data with expected field names, for example: "value", "title", "text"  (see Format menu &lt; Help for supported field names) </div>');
+                viz.$container_wrap.append('<div class="number_set_viz-unexpected_data_fmt">Unexpected data format.<br />Provide data with expected field names, for example: "value", "title", "text"  (see Format menu &gt; Help for supported field names) </div>');
                 return;
             }
 
             // Can't continue becuase of data issues
             if (! hasId && viz.config.absolute === "yes") {
                 viz.$container_wrap.empty();
-                viz.$container_wrap.append('<div style="text-align: center; width:100%; color: #818d99; line-height: 3;">Unexpected data format.<br />For Absolute layout mode you must provide data with a field in the data called "id" </div>');
+                viz.$container_wrap.append('<div class="number_set_viz-unexpected_data_fmt">Unexpected data format.<br />For Absolute layout mode you must provide data with a field in the data called "id" </div>');
                 return;
             }
+
+            viz.$container_wrap.find('.number_set_viz-unexpected_data_fmt').remove();
 
             if (viz.positionsButton) {
                 viz.positionsButton.remove();
