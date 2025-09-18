@@ -316,6 +316,7 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                    overtimedata: [],
 	                    title: "",
 	                    value: null,
+	                    drilldowndata: {}
 	                };
 
 	                viz.item.push(item);
@@ -329,10 +330,15 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                            item[allowedOverrides[viz.data.fields[k].name]] = viz.data.rows[itemidx][k];
 	                        }
 	                    }
+	                    if (viz.data.fields[k].name !== "sparkline" && viz.data.fields[k].name !== "height" && viz.data.fields[k].name !== "width" && viz.data.fields[k].name !== "color" && viz.data.fields[k].name !== "bgcolor" && viz.data.fields[k].name.substr(0,9) !== "threshold") {
+	                        item.drilldowndata[ "row." + viz.sanitise(viz.data.fields[k].name) ] = viz.data.rows[itemidx][k];
+	                    }
 	                }
 	                if (item.value === null) {
 	                    item.value = "";
 	                }
+	                item.drilldowndata["click.name"] = item.title ? item.title : "";
+	                item.drilldowndata["click.value"] = item.value ? item.value : "";
 
 	                // if the data doesnt set the thresholdcol's and val's then we set them based from the viz config
 	                for (var thresidx = 1; thresidx <= 6; thresidx++) {
@@ -568,28 +574,20 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                }
 	                var defaultTokenModel = splunkjs.mvc.Components.get('default');
 	                var submittedTokenModel = splunkjs.mvc.Components.get('submitted');
-	                var data = {
-	                    "click.name": item.title ? item.title : "",
-	                    "click.value": item.value ? item.value : ""
-	                };
-	                console.log("Setting token $click.name$ to \"" + data["click.name"] + "\"");
-	                console.log("Setting token $click.value$ to \"" + data["click.value"] + "\"");
-	                for (var k = 0; k < viz.data.fields.length; k++) {
-	                    if (viz.data.fields[k].name !== "sparkline" && viz.data.fields[k].name !== "height" && viz.data.fields[k].name !== "width" && viz.data.fields[k].name !== "color" && viz.data.fields[k].name !== "bgcolor" && viz.data.fields[k].name.substr(0,9) !== "threshold") {
-	                        var token_name = "row." + viz.sanitise(viz.data.fields[k].name);
-	                        data[token_name] = viz.data.rows[itemId][k];
-	                        console.log("Setting token $" +  token_name + "$ to \"" + viz.data.rows[itemId][k] + "\"");
+	                for (var k in item.drilldowndata) {
+	                    if (item.drilldowndata.hasOwnProperty(k) ) {
+	                        console.log("Setting token $" +  k + "$ to \"" + item.drilldowndata[k] + "\"");
 	                        if (defaultTokenModel) {
-	                            defaultTokenModel.set(token_name, viz.data.rows[itemId][k]);
+	                            defaultTokenModel.set(k, item.drilldowndata[k]);
 	                        } 
 	                        if (submittedTokenModel) {
-	                            submittedTokenModel.set(token_name, viz.data.rows[itemId][k]);
+	                            submittedTokenModel.set(k, item.drilldowndata[k]);
 	                        }
 	                    }
 	                }
 	                viz.drilldown({
 	                    action: SplunkVisualizationBase.FIELD_VALUE_DRILLDOWN,
-	                    data: data
+	                    data: item.drilldowndata
 	                }, browserEvent);
 	            });
 
