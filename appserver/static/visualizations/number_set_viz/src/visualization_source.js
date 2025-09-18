@@ -248,6 +248,8 @@ function(
                 text: "text",
                 id: "id",
                 subtitle: "subtitle",
+                tooltip: "tooltip",
+                tooltip_html: "tooltip_html",
                 thresholdcolor1: "thresholdcol1",
                 thresholdcolor2: "thresholdcol2",
                 thresholdcolor3: "thresholdcol3",
@@ -265,13 +267,16 @@ function(
             };
 
             viz.item = [];
+            viz.allowDrilldown = true;
             for (var itemidx = 0; itemidx < viz.data.rows.length; itemidx++) {
                 item = {
                     id: itemidx,
                     overtimedata: [],
                     title: "",
                     value: null,
-                    drilldowndata: {}
+                    drilldowndata: {},
+                    tooltip: "",
+                    tooltip_html: ""
                 };
 
                 viz.item.push(item);
@@ -285,7 +290,7 @@ function(
                             item[allowedOverrides[viz.data.fields[k].name]] = viz.data.rows[itemidx][k];
                         }
                     }
-                    if (viz.data.fields[k].name !== "sparkline" && viz.data.fields[k].name !== "height" && viz.data.fields[k].name !== "width" && viz.data.fields[k].name !== "color" && viz.data.fields[k].name !== "bgcolor" && viz.data.fields[k].name.substr(0,9) !== "threshold") {
+                    if (viz.data.fields[k].name !== "sparkline" && viz.data.fields[k].name !== "height" && viz.data.fields[k].name !== "width" && viz.data.fields[k].name !== "color" && viz.data.fields[k].name !== "bgcolor" && viz.data.fields[k].name.substr(0,9) !== "threshold" && viz.data.fields[k].name !== "tooltip" && viz.data.fields[k].name !== "tooltip_html") {
                         item.drilldowndata[ "row." + viz.sanitise(viz.data.fields[k].name) ] = viz.data.rows[itemidx][k];
                     }
                 }
@@ -449,6 +454,44 @@ function(
                 viz.config.containerLeftMargin = ((viz.config.containerWidth - (viz.config.itemsPerRow * (viz.config.itemWidth + (viz.config.margin/2)) - (viz.config.margin/2))) / 2);
             }
 
+            /* Some custom HTML tooltips */
+            viz.domTooltip = $("<div class='number_set_viz-tooltip_wrap' style='top:-1000px;left:-1000px;'></div>").appendTo(viz.$container_wrap);
+            viz.$container_wrap.on("mousemove", function(evt) {
+                var c_offset = viz.$container_wrap.offset();
+                var c_width = viz.$container_wrap.width();
+                var c_height = viz.$container_wrap.height();
+                var x = evt.pageX - c_offset.left;
+                var y = evt.pageY - c_offset.top;
+                var pos = {};
+                if (x < (c_width * 0.7)) {
+                    pos.left = (x + 30) + "px";
+                    pos.right = "";
+                } else { 
+                    pos.right = (c_width - x + 30) + "px";
+                    pos.left = "";
+                }
+                if (y < (c_height * 0.7)) {
+                    pos.top = y + "px";
+                    pos.bottom = "";
+                } else { 
+                    pos.bottom = (c_height - y) + "px";
+                    pos.top = "";
+                }
+                viz.domTooltip.css(pos);
+            });
+            
+            /* When the HTML tooltip goes over an icon, set the contents of the hover window  */
+            viz.$container_wrap.hoverIntent({
+                // If the sparkline tooltip is being used, then we put the main tooltip only on the title field.
+                selector: "[data-number_set_viz_tooltip]",
+                over: function(){
+                    viz.domTooltip.empty().append($("<div class='number_set_viz-tooltip_main'></div>").append($(this).attr("data-number_set_viz_tooltip")));
+                },
+                out: function(){
+                    viz.domTooltip.empty();
+                }
+            });   
+
             viz.animationDelays = [];
             for (var i=0; i < viz.config.itemsPerRow; i++) {
                 viz.animationDelays.push(Math.round(1000 * (-Math.pow(2, -10 * i/viz.item.length) + 1)))
@@ -521,10 +564,10 @@ function(
                 }
 
             }
-            // Drilldown only available if there is a title field
+            // Drilldown
             item.$container.css("cursor","pointer").on("click", function(browserEvent){
-                // if the person was dragging we dont want to accidentally drilldown
-                if (viz.hasOwnProperty("distance_dragged") && viz.distance_dragged > 0) {
+                // if the person has been dragging, then disable all drilldowns until the viz is reloaded
+                if (! viz.allowDrilldown) {
                     return;
                 }
                 var defaultTokenModel = splunkjs.mvc.Components.get('default');
@@ -546,6 +589,16 @@ function(
                 }, browserEvent);
             });
 
+            //Tooltip
+            var tt_text = item.tooltip_html + viz.htmlEncode(item.tooltip)
+            if (tt_text !== "") {
+                if (item.overtimedata.length && viz.config.sparkorder !== "no") {
+                    item.$overlayTitle.attr("data-number_set_viz_tooltip", tt_text);
+                } else {
+                    item.$container.attr("data-number_set_viz_tooltip", tt_text);
+                }
+            }
+
             if (viz.config.absolute === "yes") { 
                 
                 item.$container.addClass("number_set_viz-absolute").css("z-index", itemOffset+1);
@@ -554,11 +607,12 @@ function(
                     // Dont allow dragging in view mode
                     if ($(".dashboard-body>.dashboard.view-mode").length > 0) { return; }
 
+                    viz.domTooltip.empty();
+
                     var container = viz.$container_wrap[0].getBoundingClientRect();
                     var shiftX = event.clientX - item.$container[0].getBoundingClientRect().left + container.left;
                     var shiftY = event.clientY - item.$container[0].getBoundingClientRect().top + container.top + $(window).scrollTop();
 
-                    viz.distance_dragged = 0;
                     moveAt(event.pageX, event.pageY);
 
                     // taking initial shifts into account
@@ -588,7 +642,8 @@ function(
 
                     function onMouseMove(event) {
                         moveAt(event.pageX, event.pageY);
-                        viz.distance_dragged++;
+                        // once items have been moved, no longer allow drilldowns, as its annoying to lose progress.
+                        viz.allowDrilldown = false;
                     }
 
                     $(document).on('mousemove.number_set_viz', onMouseMove);
@@ -1049,12 +1104,16 @@ function(
             }
             return color2;
         },
+	    
+        htmlEncode: function(value){
+		    return $('<div/>').text(value).html();
+	    },
 
         tooltip: function(tooltipModel, chart) {
-            var tooltipEl = $('.number_set_viz-tooltip');
+            var tooltipEl = $('.number_set_viz-tooltip_spark');
             // Create element on first render
             if (tooltipEl.length === 0) {
-                tooltipEl = $('<div class="number_set_viz-tooltip"></div>').appendTo("body");
+                tooltipEl = $('<div class="number_set_viz-tooltip_spark"></div>').appendTo("body");
             }
         // Hide if no tooltip
             if (tooltipModel.opacity === 0 || ! tooltipModel.body) {
@@ -1139,6 +1198,18 @@ function(
             });
         },
     };
+
+
+/*!
+ * hoverIntent v1.10.1 // 2019.10.05 // jQuery v1.7.0+
+ * http://briancherne.github.io/jquery-hoverIntent/
+ *
+ * You may use hoverIntent under the terms of the MIT license. Basically that
+ * means you are free to use hoverIntent as long as this header is left intact.
+ * Copyright 2007-2019 Brian Cherne
+ */
+!function(factory){"use strict";"function"==typeof define&&define.amd?define(["jquery"],factory):"object"==typeof module&&module.exports?module.exports=factory(require("jquery")):jQuery&&!jQuery.fn.hoverIntent&&factory(jQuery)}(function($){"use strict";function track(ev){cX=ev.pageX,cY=ev.pageY}var cX,cY,_cfg={interval:100,sensitivity:6,timeout:0},INSTANCE_COUNT=0,compare=function(ev,$el,s,cfg){if(Math.sqrt((s.pX-cX)*(s.pX-cX)+(s.pY-cY)*(s.pY-cY))<cfg.sensitivity)return $el.off(s.event,track),delete s.timeoutId,s.isActive=!0,ev.pageX=cX,ev.pageY=cY,delete s.pX,delete s.pY,cfg.over.apply($el[0],[ev]);s.pX=cX,s.pY=cY,s.timeoutId=setTimeout(function(){compare(ev,$el,s,cfg)},cfg.interval)};$.fn.hoverIntent=function(handlerIn,handlerOut,selector){var instanceId=INSTANCE_COUNT++,cfg=$.extend({},_cfg);$.isPlainObject(handlerIn)?(cfg=$.extend(cfg,handlerIn),$.isFunction(cfg.out)||(cfg.out=cfg.over)):cfg=$.isFunction(handlerOut)?$.extend(cfg,{over:handlerIn,out:handlerOut,selector:selector}):$.extend(cfg,{over:handlerIn,out:handlerIn,selector:handlerOut});function handleHover(e){var ev=$.extend({},e),$el=$(this),hoverIntentData=$el.data("hoverIntent");hoverIntentData||$el.data("hoverIntent",hoverIntentData={});var state=hoverIntentData[instanceId];state||(hoverIntentData[instanceId]=state={id:instanceId}),state.timeoutId&&(state.timeoutId=clearTimeout(state.timeoutId));var mousemove=state.event="mousemove.hoverIntent.hoverIntent"+instanceId;if("mouseenter"===e.type){if(state.isActive)return;state.pX=ev.pageX,state.pY=ev.pageY,$el.off(mousemove,track).on(mousemove,track),state.timeoutId=setTimeout(function(){compare(ev,$el,state,cfg)},cfg.interval)}else{if(!state.isActive)return;$el.off(mousemove,track),state.timeoutId=setTimeout(function(){!function(ev,$el,s,out){var data=$el.data("hoverIntent");data&&delete data[s.id],out.apply($el[0],[ev])}(ev,$el,state,cfg.out)},cfg.timeout)}}return this.on({"mouseenter.hoverIntent":handleHover,"mouseleave.hoverIntent":handleHover},cfg.selector)}});
+
 
     return SplunkVisualizationBase.extend(vizObj);
 });

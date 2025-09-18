@@ -194,6 +194,20 @@ Copyright (C) 2023 Chris Younger | <a href="https://github.com/ChrisYounger/numb
 </tr>
 <tr>
 <td>
+                  <code>tooltip</code>
+                </td>
+<td>String</td>
+<td>Text content to show as a tooltip when the item is hovered over</td>
+</tr>
+<tr>
+<td>
+                  <code>tooltip_html</code>
+                </td>
+<td>String</td>
+<td>Content to render as HTML as a tooltip when the item is hovered over</td>
+</tr>
+<tr>
+<td>
                   <code>info_min_time</code>/<code>info_max_time</code>
                 </td>
 <td>Epoch time</td>

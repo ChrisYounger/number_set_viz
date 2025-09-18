@@ -123,7 +123,22 @@
     padding-bottom: 4px;
     box-sizing: border-box;
 }
-.number_set_viz-tooltip {
+.number_set_viz-tooltip_wrap {
+    position: absolute;
+    z-index: 9000;
+}
+.number_set_viz-tooltip_main {
+    background-color: #F2F4F5;
+    border: 1px solid #C6C6C6;
+    text-align: center;
+    padding: 6px;
+    position:relative;
+    display: block;
+    border-radius: 3px;
+    color: #5E5E5E;
+    box-shadow:  0 6px 6px rgba(0,0,0,0.20);
+}
+.number_set_viz-tooltip_spark {
   pointer-events: none;
   z-index: 999;
   background-color: black;
