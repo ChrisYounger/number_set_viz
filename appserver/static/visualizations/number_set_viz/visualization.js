@@ -287,6 +287,9 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                height: "height",
 	                width: "width",
 	                bgcolor: "bgcolor",
+	                titlecolor: "titlecolor",
+	                valuecolor: "valuecolor",
+	                subtitlecolor: "subtitlecolor",
 	                value: "value",
 	                sparkline: "overtimedata",
 	                title: "title",
@@ -335,8 +338,18 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                            item[allowedOverrides[viz.data.fields[k].name]] = viz.data.rows[itemidx][k];
 	                        }
 	                    }
-	                    if (viz.data.fields[k].name !== "sparkline" && viz.data.fields[k].name !== "height" && viz.data.fields[k].name !== "width" && viz.data.fields[k].name !== "color" && viz.data.fields[k].name !== "bgcolor" && viz.data.fields[k].name.substr(0,9) !== "threshold" && viz.data.fields[k].name !== "tooltip" && viz.data.fields[k].name !== "tooltip_html") {
-	                        item.drilldowndata[ "row." + viz.sanitise(viz.data.fields[k].name) ] = viz.data.rows[itemidx][k];
+	                    if (viz.data.fields[k].name !== "sparkline" 
+	                        && viz.data.fields[k].name !== "height" 
+	                        && viz.data.fields[k].name !== "width" 
+	                        && viz.data.fields[k].name !== "color" 
+	                        && viz.data.fields[k].name !== "bgcolor" 
+	                        && viz.data.fields[k].name !== "titlecolor" 
+	                        && viz.data.fields[k].name !== "valuecolor" 
+	                        && viz.data.fields[k].name !== "subtitlecolor" 
+	                        && viz.data.fields[k].name.substr(0,9) !== "threshold" 
+	                        && viz.data.fields[k].name !== "tooltip" 
+	                        && viz.data.fields[k].name !== "tooltip_html") {
+	                        item.drilldowndata[ "row." + viz.sanitise(viz.data.fields[k].name) ] = viz.data.rows[itemidx][k];                     
 	                    }
 	                }
 	                if (item.value === null) {
@@ -615,6 +628,7 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                if (! viz.allowDrilldown) {
 	                    return;
 	                }
+	                viz.domTooltip.empty();
 	                var defaultTokenModel = splunkjs.mvc.Components.get('default');
 	                var submittedTokenModel = splunkjs.mvc.Components.get('submitted');
 	                for (var k in item.drilldowndata) {
@@ -1029,13 +1043,19 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	                    item.$overlayText.text(value_display);
 	                }
 	            }
-	            if (viz.config.textmode !== "static") {
+	            if (item.hasOwnProperty("valuecolor") && $.trim(item.valuecolor) !== "") {            
+	                item.$overlayText.css({"color": item.valuecolor});
+	            } else if (viz.config.textmode !== "static") {
 	                item.$overlayText.css({"color": viz.getColorFromMode(viz.config.textmode, viz.config.textcolor, value_color)});
 	            }
-	            if (viz.config.titlecolormode !== "static") {
+	            if (item.hasOwnProperty("titlecolor") && $.trim(item.titlecolor) !== "") {            
+	                item.$overlayTitle.css({"color": item.titlecolor});
+	            } else if (viz.config.titlecolormode !== "static") {
 	                item.$overlayTitle.css({"color": viz.getColorFromMode(viz.config.titlecolormode, viz.config.titlecolor, value_color)});
 	            }
-	            if (viz.config.subtitlecolormode !== "static") {
+	            if (item.hasOwnProperty("subtitlecolor") && $.trim(item.subtitlecolor) !== "") {            
+	                item.$overlaySubTitle.css({"color": item.subtitlecolor});
+	            } else if (viz.config.subtitlecolormode !== "static") {
 	                item.$overlaySubTitle.css({"color": viz.getColorFromMode(viz.config.subtitlecolormode, viz.config.subtitlecolor, value_color)});
 	            }
 
@@ -1132,22 +1152,25 @@ define(["api/SplunkVisualizationBase","api/SplunkVisualizationUtils"], function(
 	        },
 
 	        getColorFromMode: function(mode, color1, color2) {
-	            if (mode === "darker1") {
-	                return tinycolor(color2).darken(10).toString();
-	            } else if (mode === "darker2") {
-	                return tinycolor(color2).darken(20).toString();
-	            } else if (mode === "darker3") {
-	                return tinycolor(color2).darken(40).toString();
-	            } else if (mode === "lighter1") {
-	                return tinycolor(color2).lighten(10).toString();
-	            } else if (mode === "lighter2") {
-	                return tinycolor(color2).lighten(20).toString();
-	            } else if (mode === "lighter3") {
-	                return tinycolor(color2).lighten(40).toString();
-	            } else if (mode === "static") {
+	            if (mode === "static") {
 	                return color1;
+	            } else if (mode === "auto") {
+	                return color2;
+	            } else {
+	                var factor = 10;
+	                if (mode.indexOf("2") !== -1) {
+	                    factor = 20;
+	                } else if (mode.indexOf("3") !== -1)  {
+	                    factor = 40;
+	                }
+	                if (mode.indexOf("lighter") !== -1) {
+	                    return tinycolor(color2).lighten(factor).toString();
+	                } else if (mode.indexOf("darker") !== -1) {
+	                    return tinycolor(color2).darken(factor).toString();
+	                } else {
+	                    return tinycolor.mostReadable(color2, [tinycolor(color2).lighten(factor*2), tinycolor(color2).darken(factor*2)],{includeFallbackColors:false}).toString();
+	                }
 	            }
-	            return color2;
 	        },
 		    
 	        htmlEncode: function(value){

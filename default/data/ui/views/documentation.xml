@@ -148,7 +148,28 @@ Copyright (C) 2023 Chris Younger | <a href="https://github.com/ChrisYounger/numb
                   <code>bgcolor</code>
                 </td>
 <td>HTML color code</td>
-<td>Similar to above but will only overide the background color (does not change the "status/threshold" color). The threshold color can still be used by other components.</td>
+<td>Overide the background color (does not change the "status/threshold" color). The threshold color can still be used by other components.</td>
+</tr>
+<tr>
+<td>
+                  <code>valuecolor</code>
+                </td>
+<td>HTML color code</td>
+<td>Overide the value color (does not change the "status/threshold" color). The threshold color can still be used by other components.</td>
+</tr>
+<tr>
+<td>
+                  <code>titlecolor</code>
+                </td>
+<td>HTML color code</td>
+<td>Overide the title color (does not change the "status/threshold" color). The threshold color can still be used by other components.</td>
+</tr>
+<tr>
+<td>
+                  <code>subtitlecolor</code>
+                </td>
+<td>HTML color code</td>
+<td>Overide the subtitle color (does not change the "status/threshold" color). The threshold color can still be used by other components.</td>
 </tr>
 <tr>
 <td>
@@ -237,6 +258,7 @@ Copyright (C) 2023 Chris Younger | <a href="https://github.com/ChrisYounger/numb
 <ul>
 <li>The Title and Subtitle options should be left blank to use values from the data instead.</li>
 <li>Advanced font styles are hosted by Google Fonts so these won't work unless the viewer has an internet connection.</li>
+<li>In the various Color dropdowns, you can now select an option "most readable". This will automatically select a lighter or darker percentage of the threshold colour, depending on which is more readable.</li>
 </ul>
 </li>
 </ol>
